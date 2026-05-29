@@ -20,6 +20,11 @@ export async function GET(request: NextRequest) {
       },
       include: {
         abteilung: true,
+        qualifikationen: {
+          include: {
+            qualifikation: true,
+          },
+        },
       },
       orderBy: {
         nachname: "asc",

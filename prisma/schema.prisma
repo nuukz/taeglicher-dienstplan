@@ -26,6 +26,14 @@ enum SchichtTyp {
   NACHT
 }
 
+enum AbwesenheitsGrund {
+  KRANK
+  URLAUB
+  FORTBILDUNG
+  FREI
+  SONSTIGES
+}
+
 // --- Abteilung ---
 model Abteilung {
   id        String   @id @default(cuid())
@@ -37,6 +45,30 @@ model Abteilung {
   dienstplaene Dienstplan[]
 
   @@map("dp_abteilung")
+}
+
+// --- Qualifikation ---
+model Qualifikation {
+  id      String @id @default(cuid())
+  kuerzel String @unique // "NotSan", "RS", "AGT", etc.
+  name    String         // "Notfallsanitäter", "Rettungssanitäter", etc.
+  farbe   String @default("#6b7280") // Hex-Farbe für Badge
+
+  users UserQualifikation[]
+
+  @@map("dp_qualifikation")
+}
+
+// --- UserQualifikation (Join Table) ---
+model UserQualifikation {
+  userId          String
+  qualifikationId String
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  qualifikation Qualifikation @relation(fields: [qualifikationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, qualifikationId])
+  @@map("dp_user_qualifikation")
 }
 
 // --- User ---
@@ -56,8 +88,26 @@ model User {
   abteilung         Abteilung          @relation(fields: [abteilungId], references: [id])
   zuweisungen       Zuweisung[]
   pushSubscriptions PushSubscription[]
+  qualifikationen   UserQualifikation[]
+  abwesenheiten     Abwesenheit[]
 
   @@map("dp_user")
+}
+
+// --- Abwesenheit ---
+model Abwesenheit {
+  id        String            @id @default(cuid())
+  userId    String
+  datum     DateTime          @db.Date
+  schicht   SchichtTyp?       // null = ganzer Tag
+  grund     AbwesenheitsGrund
+  notiz     String?
+  createdAt DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, datum, schicht])
+  @@map("dp_abwesenheit")
 }
 
 // --- Fahrzeug ---

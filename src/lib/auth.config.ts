@@ -3,6 +3,7 @@ import type { NextAuthConfig } from "next-auth";
 // Edge-kompatible Auth-Config (ohne Prisma/pg imports)
 // Wird von der Middleware verwendet
 export const authConfig: NextAuthConfig = {
+  trustHost: true,
   pages: {
     signIn: "/login",
   },

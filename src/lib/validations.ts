@@ -93,6 +93,22 @@ export const tagesFahrzeugSchema = z.object({
   aktiv: z.boolean(),
 });
 
+// --- Abwesenheit ---
+
+export const createAbwesenheitSchema = z.object({
+  userId: z.string().min(1, "User-ID ist erforderlich"),
+  datum: z.string().min(1, "Datum ist erforderlich"),
+  schicht: z.enum(["TAG", "NACHT"]).optional().nullable(),
+  grund: z.enum(["KRANK", "URLAUB", "FORTBILDUNG", "FREI", "SONSTIGES"]),
+  notiz: z.string().optional().nullable(),
+});
+
+export const deleteAbwesenheitSchema = z.object({
+  userId: z.string().min(1, "User-ID ist erforderlich"),
+  datum: z.string().min(1, "Datum ist erforderlich"),
+  schicht: z.enum(["TAG", "NACHT"]).optional().nullable(),
+});
+
 // --- Einstellungen ---
 
 export const updateSchichtKonfigurationSchema = z.object({

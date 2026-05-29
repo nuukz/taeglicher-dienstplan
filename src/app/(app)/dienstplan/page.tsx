@@ -12,91 +12,21 @@ import {
   Loader2,
   Star,
   Pencil,
+  FileDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// ----------------------------------------------------------------
-// Types
-// ----------------------------------------------------------------
-
-interface Abteilung {
-  id: string;
-  name: string;
-}
-
-interface SchichtKonfiguration {
-  id: string;
-  schicht: "TAG" | "NACHT";
-  startZeit: string;
-  endZeit: string;
-}
-
-interface FahrzeugData {
-  id: string;
-  name: string;
-  typ: string;
-  aktiv: boolean;
-  reihenfolge: number;
-  positionen: FahrzeugPositionData[];
-}
-
-interface FahrzeugPositionData {
-  id: string;
-  name: string;
-  fahrzeugId: string;
-  reihenfolge: number;
-}
-
-interface UserData {
-  id: string;
-  vorname: string;
-  nachname: string;
-  email: string;
-  rolle: "ADMIN" | "KOLLEGE";
-  beschaeftigung: "BEAMTER" | "ANGESTELLTER";
-  aktiv: boolean;
-  abteilungId: string;
-}
-
-interface ZuweisungData {
-  id: string;
-  dienstplanId: string;
-  userId: string;
-  fahrzeugPositionId: string;
-  sonderfunktionId: string | null;
-  user: UserData;
-  fahrzeugPosition: FahrzeugPositionData & { fahrzeug: FahrzeugData };
-  sonderfunktion: { id: string; name: string } | null;
-}
-
-interface TagesFahrzeugData {
-  id: string;
-  dienstplanId: string;
-  fahrzeugId: string;
-  aktiv: boolean;
-  fahrzeug: FahrzeugData;
-}
-
-interface DienstplanData {
-  id: string;
-  datum: string;
-  schicht: "TAG" | "NACHT";
-  abteilungId: string;
-  veroeffentlicht: boolean;
-  zuweisungen: ZuweisungData[];
-  tagesFahrzeuge: TagesFahrzeugData[];
-}
-
-interface DienstplanResponse {
-  datum: string;
-  abteilungId: string;
-  tag: DienstplanData | null;
-  nacht: DienstplanData | null;
-}
+import { exportDienstplanPdf } from "@/lib/pdf-export";
+import type {
+  Abteilung,
+  FahrzeugData,
+  SchichtKonfiguration,
+  DienstplanData,
+  DienstplanResponse,
+  ZuweisungData,
+} from "@/types/dienstplan";
 
 // ----------------------------------------------------------------
 // Helpers
@@ -285,8 +215,8 @@ export default function DienstplanPage() {
   const router = useRouter();
 
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [abteilungen, setAbteilungen] = useState<Abteilung[]>([]);
   const [selectedAbteilung, setSelectedAbteilung] = useState<string>("");
+  const [abteilungName, setAbteilungName] = useState<string>("");
   const [dienstplanData, setDienstplanData] =
     useState<DienstplanResponse | null>(null);
   const [fahrzeuge, setFahrzeuge] = useState<FahrzeugData[]>([]);
@@ -309,25 +239,23 @@ export default function DienstplanPage() {
         fetch("/api/einstellungen"),
       ]);
 
-      if (!abtRes.ok) throw new Error("Abteilungen konnten nicht geladen werden");
       if (!fzRes.ok) throw new Error("Fahrzeuge konnten nicht geladen werden");
       if (!zeitRes.ok) throw new Error("Einstellungen konnten nicht geladen werden");
 
       const [abtData, fzData, zeitData] = await Promise.all([
-        abtRes.json(),
+        abtRes.ok ? abtRes.json() : [],
         fzRes.json(),
         zeitRes.json(),
       ]);
 
-      setAbteilungen(abtData);
       setFahrzeuge(fzData);
       setSchichtZeiten(zeitData);
 
-      // Set default abteilung from session or first
+      // Nur eigene Abteilung
       if (session?.user?.abteilungId) {
         setSelectedAbteilung(session.user.abteilungId);
-      } else if (abtData.length > 0) {
-        setSelectedAbteilung(abtData[0].id);
+        const abt = abtData.find((a: Abteilung) => a.id === session.user.abteilungId);
+        if (abt) setAbteilungName(abt.name);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Fehler beim Laden");
@@ -443,12 +371,31 @@ export default function DienstplanPage() {
             )
           ) : null}
 
+          {dienstplanData && (
+            <Button
+              variant="outline"
+              onClick={() =>
+                exportDienstplanPdf({
+                  datum: formatDateApi(currentDate),
+                  abteilungName,
+                  tag: dienstplanData.tag,
+                  nacht: dienstplanData.nacht,
+                  fahrzeuge,
+                  schichtZeiten,
+                })
+              }
+            >
+              <FileDown className="size-4" />
+              PDF
+            </Button>
+          )}
+
           {session?.user?.rolle === "ADMIN" && (
             <Button
               variant="default"
               onClick={() =>
                 router.push(
-                  `/dienstplan/bearbeiten?datum=${formatDateApi(currentDate)}&abteilung=${selectedAbteilung}`
+                  `/dienstplan/bearbeiten?datum=${formatDateApi(currentDate)}`
                 )
               }
             >
@@ -484,21 +431,7 @@ export default function DienstplanPage() {
           )}
         </div>
 
-        {/* Abteilung Tabs */}
-        {abteilungen.length > 0 && (
-          <Tabs
-            value={selectedAbteilung}
-            onValueChange={(val) => setSelectedAbteilung(val as string)}
-          >
-            <TabsList>
-              {abteilungen.map((abt) => (
-                <TabsTrigger key={abt.id} value={abt.id}>
-                  Wachabteilung {abt.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        )}
+        {/* Nur eigene Abteilung - kein Wechsel */}
       </div>
 
       {/* Content */}

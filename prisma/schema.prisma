@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// Dienstplan-Modul – Modular aufgebaut für ShiftHero-Integration
+// ============================================================
+
+enum Rolle {
+  ADMIN
+  KOLLEGE
+}
+
+enum Beschaeftigung {
+  BEAMTER
+  ANGESTELLTER
+}
+
+enum SchichtTyp {
+  TAG
+  NACHT
+}
+
+// --- Abteilung ---
+model Abteilung {
+  id        String   @id @default(cuid())
+  name      String   @unique // 1, 2, 3
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       User[]
+  dienstplaene Dienstplan[]
+
+  @@map("dp_abteilung")
+}
+
+// --- User ---
+model User {
+  id             String        @id @default(cuid())
+  email          String        @unique
+  passwortHash   String
+  vorname        String
+  nachname       String
+  rolle          Rolle         @default(KOLLEGE)
+  beschaeftigung Beschaeftigung
+  aktiv          Boolean       @default(true)
+  abteilungId    String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  abteilung         Abteilung          @relation(fields: [abteilungId], references: [id])
+  zuweisungen       Zuweisung[]
+  pushSubscriptions PushSubscription[]
+
+  @@map("dp_user")
+}
+
+// --- Fahrzeug ---
+model Fahrzeug {
+  id        String   @id @default(cuid())
+  name      String   @unique // HLF, DL, ELW, RTW1, RTW2
+  typ       String   // Löschfahrzeug, Drehleiter, Einsatzleitwagen, Rettungswagen
+  aktiv     Boolean  @default(true)
+  reihenfolge Int    @default(0) // Sortierung in der Anzeige
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  positionen     FahrzeugPosition[]
+  tagesFahrzeuge TagesFahrzeug[]
+
+  @@map("dp_fahrzeug")
+}
+
+// --- FahrzeugPosition ---
+model FahrzeugPosition {
+  id          String   @id @default(cuid())
+  name        String   // Maschinist, Fahrzeugführer, Angriffstrupp, etc.
+  fahrzeugId  String
+  reihenfolge Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  fahrzeug    Fahrzeug    @relation(fields: [fahrzeugId], references: [id], onDelete: Cascade)
+  zuweisungen Zuweisung[]
+
+  @@unique([fahrzeugId, name])
+  @@map("dp_fahrzeug_position")
+}
+
+// --- Sonderfunktion ---
+model Sonderfunktion {
+  id        String   @id @default(cuid())
+  name      String   @unique // Koch, Tagesdienst, Schirmmeister, etc.
+  aktiv     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  zuweisungen Zuweisung[]
+
+  @@map("dp_sonderfunktion")
+}
+
+// --- Dienstplan ---
+model Dienstplan {
+  id            String    @id @default(cuid())
+  datum         DateTime  @db.Date
+  schicht       SchichtTyp
+  abteilungId   String
+  veroeffentlicht Boolean @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  abteilung      Abteilung           @relation(fields: [abteilungId], references: [id])
+  zuweisungen    Zuweisung[]
+  tagesFahrzeuge TagesFahrzeug[]
+  aenderungen    DienstplanAenderung[]
+
+  @@unique([datum, schicht, abteilungId])
+  @@map("dp_dienstplan")
+}
+
+// --- Zuweisung ---
+model Zuweisung {
+  id               String  @id @default(cuid())
+  dienstplanId     String
+  userId           String
+  fahrzeugPositionId String
+  sonderfunktionId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  dienstplan       Dienstplan       @relation(fields: [dienstplanId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id])
+  fahrzeugPosition FahrzeugPosition @relation(fields: [fahrzeugPositionId], references: [id])
+  sonderfunktion   Sonderfunktion?  @relation(fields: [sonderfunktionId], references: [id])
+
+  @@unique([dienstplanId, fahrzeugPositionId]) // Position nur einmal besetzt
+  @@unique([dienstplanId, userId])             // Person nur einmal pro Schicht
+  @@map("dp_zuweisung")
+}
+
+// --- TagesFahrzeug (Override: Fahrzeug tageweise an/aus) ---
+model TagesFahrzeug {
+  id           String   @id @default(cuid())
+  dienstplanId String
+  fahrzeugId   String
+  aktiv        Boolean  @default(false) // false = Fahrzeug ist an diesem Tag NICHT verfügbar
+  createdAt    DateTime @default(now())
+
+  dienstplan Dienstplan @relation(fields: [dienstplanId], references: [id], onDelete: Cascade)
+  fahrzeug   Fahrzeug   @relation(fields: [fahrzeugId], references: [id])
+
+  @@unique([dienstplanId, fahrzeugId])
+  @@map("dp_tages_fahrzeug")
+}
+
+// --- DienstplanAenderung (Changelog für Push) ---
+model DienstplanAenderung {
+  id           String   @id @default(cuid())
+  dienstplanId String
+  beschreibung String   // "Max Mustermann: HLF Maschinist → DL Maschinist"
+  createdAt    DateTime @default(now())
+
+  dienstplan Dienstplan @relation(fields: [dienstplanId], references: [id], onDelete: Cascade)
+
+  @@map("dp_dienstplan_aenderung")
+}
+
+// --- PushSubscription ---
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("dp_push_subscription")
+}
+
+// --- SchichtKonfiguration ---
+model SchichtKonfiguration {
+  id         String    @id @default(cuid())
+  schicht    SchichtTyp @unique
+  startZeit  String    // "07:00"
+  endZeit    String    // "19:00"
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("dp_schicht_konfiguration")
+}

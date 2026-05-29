@@ -67,10 +67,10 @@ export default function LoginPage() {
             </svg>
           </div>
           <CardTitle className="text-xl font-bold tracking-tight">
-            Dienstplan
+            WachPlan
           </CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
-            Feuerwehr Anmeldung
+            ShiftHero - Feuerwehr Anmeldung
           </CardDescription>
         </CardHeader>
 

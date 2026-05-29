@@ -86,7 +86,7 @@ export function DesktopSidebar({ vorname, isAdmin }: AppNavProps) {
     <aside className="hidden md:flex md:w-64 md:flex-col md:bg-slate-900">
       <div className="flex h-16 items-center gap-3 border-b border-slate-800 px-6">
         <CalendarDays className="size-6 text-red-500" />
-        <h1 className="text-lg font-bold text-white">Dienstplan</h1>
+        <h1 className="text-lg font-bold text-white">WachPlan</h1>
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
         {visibleNavItems.map((item) => (
@@ -128,7 +128,7 @@ export function MobileHeader({ vorname, isAdmin }: AppNavProps) {
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <div className="flex h-14 items-center gap-3 border-b border-slate-800 px-6">
               <CalendarDays className="size-6 text-red-500" />
-              <span className="text-lg font-bold text-white">Dienstplan</span>
+              <span className="text-lg font-bold text-white">WachPlan</span>
             </div>
             <nav className="space-y-1 px-3 py-4">
               {visibleNavItems.map((item) => (
@@ -140,7 +140,7 @@ export function MobileHeader({ vorname, isAdmin }: AppNavProps) {
             </div>
           </SheetContent>
         </Sheet>
-        <h1 className="text-base font-bold text-white">Dienstplan</h1>
+        <h1 className="text-base font-bold text-white">WachPlan</h1>
       </div>
       <div className="flex items-center gap-2">
         <span className="text-sm text-slate-300">{vorname}</span>

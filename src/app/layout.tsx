@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import AuthSessionProvider from "@/components/layout/session-provider";
@@ -6,15 +6,18 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
-export const metadata: Metadata = {
-  title: "Dienstplan - Feuerwehr",
-  description: "Täglicher Dienstplan für die Feuerwehr",
-  manifest: "/manifest.json",
+export const viewport: Viewport = {
   themeColor: "#1e293b",
+};
+
+export const metadata: Metadata = {
+  title: "ShiftHero - WachPlan",
+  description: "Tagesdienstplan fuer die Feuerwehr",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Dienstplan",
+    title: "WachPlan",
   },
 };
 

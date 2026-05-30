@@ -1,7 +1,7 @@
 // Service Worker für Dienstplan-App
 // Push-Benachrichtigungen + einfacher Offline-Fallback
 
-const CACHE_NAME = "dienstplan-v2";
+const CACHE_NAME = "dienstplan-v3";
 
 // --- Lifecycle ---
 
@@ -80,20 +80,23 @@ self.addEventListener("notificationclick", (event) => {
 });
 
 // --- Einfacher Offline-Fallback (Netzwerk-First) ---
+// Nur statische Assets cachen (Icons, Bilder, manifest), KEINE JS-Chunks oder HTML-Seiten
 
 self.addEventListener("fetch", (event) => {
-  // Nur GET-Requests cachen, keine API-Calls
-  if (
-    event.request.method !== "GET" ||
-    event.request.url.includes("/api/")
-  ) {
-    return;
-  }
+  if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+
+  // Nur statische Assets im /icons/ Ordner und manifest.json cachen
+  const isCacheable =
+    url.pathname.startsWith("/icons/") ||
+    url.pathname === "/manifest.json";
+
+  if (!isCacheable) return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Erfolgreiche Antwort im Cache speichern
         if (response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -103,7 +106,6 @@ self.addEventListener("fetch", (event) => {
         return response;
       })
       .catch(() => {
-        // Bei Netzwerkfehler aus dem Cache laden
         return caches.match(event.request);
       })
   );

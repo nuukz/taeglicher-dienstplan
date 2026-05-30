@@ -93,7 +93,7 @@ function DienstplanBearbeitenInner() {
   // Access check
   useEffect(() => {
     if (sessionStatus === "loading") return;
-    if (!session?.user || session.user.rolle !== "ADMIN") {
+    if (!session?.user || session.user.rolle === "KOLLEGE") {
       router.replace("/dienstplan");
     }
   }, [session, sessionStatus, router]);

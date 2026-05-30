@@ -113,6 +113,24 @@ async function main() {
   // --- Personal ---
   const passwort = await bcrypt.hash("test123", 12);
   const adminPasswort = await bcrypt.hash("admin123", 12);
+  const sysopPasswort = await bcrypt.hash("sysop123", 12);
+
+  // --- SYSOP User ---
+  await prisma.user.upsert({
+    where: { email: "sysop@shifthero.de" },
+    update: {},
+    create: {
+      email: "sysop@shifthero.de",
+      passwortHash: sysopPasswort,
+      vorname: "System",
+      nachname: "Admin",
+      rolle: Rolle.SYSOP,
+      beschaeftigung: Beschaeftigung.BEAMTER,
+      abteilungId: abt1.id,
+      aktiv: false, // Kein aktiver Feuerwehrmann
+    },
+  });
+  console.log("SYSOP-User erstellt");
 
   interface UserDef {
     email: string;
@@ -451,10 +469,48 @@ async function main() {
   });
   console.log("Abt 3 Nachtschicht: 15 Zuweisungen (RTW Dora deaktiviert)");
 
+  // --- Positions-Qualifikationsanforderungen ---
+  const posQualiDefaults: { fahrzeug: string; position: string; qualis: string[] }[] = [
+    // RTW-Positionen: Fahrer braucht RS oder NotSan
+    { fahrzeug: "RTW Anton", position: "Fahrer", qualis: ["RS"] },
+    { fahrzeug: "RTW Anton", position: "Beifahrer", qualis: ["NotSan"] },
+    { fahrzeug: "RTW Berta", position: "Fahrer", qualis: ["RS"] },
+    { fahrzeug: "RTW Berta", position: "Beifahrer", qualis: ["NotSan"] },
+    { fahrzeug: "RTW Cäsar", position: "Fahrer", qualis: ["RS"] },
+    { fahrzeug: "RTW Cäsar", position: "Beifahrer", qualis: ["NotSan"] },
+    { fahrzeug: "RTW Dora", position: "Fahrer", qualis: ["RS"] },
+    { fahrzeug: "RTW Dora", position: "Beifahrer", qualis: ["NotSan"] },
+    { fahrzeug: "RTW Kaufmann", position: "Fahrer", qualis: ["RS"] },
+    { fahrzeug: "RTW Kaufmann", position: "Beifahrer", qualis: ["NotSan"] },
+    // HLF: Maschinist braucht Masch, Fahrzeugfuehrer braucht GF
+    { fahrzeug: "HLF", position: "Maschinist", qualis: ["Masch"] },
+    { fahrzeug: "HLF", position: "Fahrzeugführer", qualis: ["GF"] },
+    // DL: Maschinist braucht Masch
+    { fahrzeug: "DL", position: "Maschinist", qualis: ["Masch"] },
+    // ELW: C-Dienst braucht ZF oder GF
+    { fahrzeug: "ELW", position: "C-Dienst", qualis: ["GF"] },
+  ];
+
+  for (const pq of posQualiDefaults) {
+    const posId = fahrzeugMap[pq.fahrzeug]?.positionen[pq.position];
+    if (!posId) continue;
+    for (const kuerzel of pq.qualis) {
+      const qId = qualiMap[kuerzel];
+      if (!qId) continue;
+      await prisma.positionQualifikation.upsert({
+        where: { positionId_qualifikationId: { positionId: posId, qualifikationId: qId } },
+        update: {},
+        create: { positionId: posId, qualifikationId: qId },
+      });
+    }
+  }
+  console.log("Positions-Qualifikationsanforderungen erstellt");
+
   console.log("\n=============================");
   console.log("Seed abgeschlossen!");
   console.log("=============================");
   console.log("\nLogin-Daten:");
+  console.log("  SYSOP:       sysop@shifthero.de / sysop123");
   console.log("  Abt 1 Admin: admin@feuerwehr.de / admin123");
   console.log("  Abt 2 Admin: o.richter@feuerwehr.de / admin123");
   console.log("  Abt 3 Admin: j.schaefer@feuerwehr.de / admin123");

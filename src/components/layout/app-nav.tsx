@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { hasMinRole, type Rolle } from "@/lib/permissions";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import {
   Sheet,
@@ -25,16 +26,22 @@ interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  adminOnly: boolean;
+  minRole: Rolle;
 }
 
 const allNavItems: NavItem[] = [
-  { href: "/dienstplan", label: "Dienstplan", icon: CalendarDays, adminOnly: false },
-  { href: "/personal", label: "Personal", icon: Users, adminOnly: true },
-  { href: "/fahrzeuge", label: "Fahrzeuge", icon: Truck, adminOnly: true },
-  { href: "/sonderfunktionen", label: "Sonderfunktionen", icon: Star, adminOnly: true },
-  { href: "/einstellungen", label: "Einstellungen", icon: Settings, adminOnly: true },
+  { href: "/dienstplan", label: "Dienstplan", icon: CalendarDays, minRole: "KOLLEGE" },
+  { href: "/personal", label: "Personal", icon: Users, minRole: "ADMIN" },
+  { href: "/fahrzeuge", label: "Fahrzeuge", icon: Truck, minRole: "ADMIN" },
+  { href: "/sonderfunktionen", label: "Sonderfunktionen", icon: Star, minRole: "ADMIN" },
+  { href: "/einstellungen", label: "Einstellungen", icon: Settings, minRole: "ADMIN" },
 ];
+
+const ROLE_LABELS: Record<Rolle, string> = {
+  SYSOP: "System-Admin",
+  ADMIN: "Administrator",
+  KOLLEGE: "Kollege",
+};
 
 function NavLink({ href, label, icon: Icon }: { href: string; label: string; icon: LucideIcon }) {
   const pathname = usePathname();
@@ -76,11 +83,11 @@ function NavLinkMobile({ href, label, icon: Icon }: { href: string; label: strin
 
 interface AppNavProps {
   vorname: string;
-  isAdmin: boolean;
+  rolle: Rolle;
 }
 
-export function DesktopSidebar({ vorname, isAdmin }: AppNavProps) {
-  const visibleNavItems = allNavItems.filter((item) => !item.adminOnly || isAdmin);
+export function DesktopSidebar({ vorname, rolle }: AppNavProps) {
+  const visibleNavItems = allNavItems.filter((item) => hasMinRole(rolle, item.minRole));
 
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:bg-slate-900">
@@ -100,7 +107,7 @@ export function DesktopSidebar({ vorname, isAdmin }: AppNavProps) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-white">{vorname}</p>
-            <p className="text-xs text-slate-400">{isAdmin ? "Administrator" : "Kollege"}</p>
+            <p className="text-xs text-slate-400">{ROLE_LABELS[rolle]}</p>
           </div>
         </div>
         <SignOutButton />
@@ -109,8 +116,8 @@ export function DesktopSidebar({ vorname, isAdmin }: AppNavProps) {
   );
 }
 
-export function MobileHeader({ vorname, isAdmin }: AppNavProps) {
-  const visibleNavItems = allNavItems.filter((item) => !item.adminOnly || isAdmin);
+export function MobileHeader({ vorname, rolle }: AppNavProps) {
+  const visibleNavItems = allNavItems.filter((item) => hasMinRole(rolle, item.minRole));
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-slate-900 px-4 md:hidden">
@@ -150,8 +157,8 @@ export function MobileHeader({ vorname, isAdmin }: AppNavProps) {
   );
 }
 
-export function MobileBottomNav({ isAdmin }: { isAdmin: boolean }) {
-  const visibleNavItems = allNavItems.filter((item) => !item.adminOnly || isAdmin);
+export function MobileBottomNav({ rolle }: { rolle: Rolle }) {
+  const visibleNavItems = allNavItems.filter((item) => hasMinRole(rolle, item.minRole));
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-slate-200 bg-white py-1 md:hidden">

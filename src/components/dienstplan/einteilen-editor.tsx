@@ -11,6 +11,7 @@ import {
   Send,
   ChevronLeft,
   User,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -25,11 +26,33 @@ import {
 import type {
   UserData,
   FahrzeugData,
+  FahrzeugPositionData,
+  QualifikationData,
   DienstplanData,
   SonderfunktionData,
   SchichtKonfiguration,
   ZuweisungData,
 } from "@/types/dienstplan";
+
+// ----------------------------------------------------------------
+// Quali-Validation Helpers
+// ----------------------------------------------------------------
+
+function getRequiredQualis(pos: FahrzeugPositionData): QualifikationData[] {
+  return (pos.requiredQualifikationen || []).map((rq) => rq.qualifikation);
+}
+
+function getUserQualiIds(user: UserData): Set<string> {
+  return new Set((user.qualifikationen || []).map((q) => q.qualifikation.id));
+}
+
+function checkQualiMatch(user: UserData, pos: FahrzeugPositionData): { ok: boolean; missing: QualifikationData[] } {
+  const required = getRequiredQualis(pos);
+  if (required.length === 0) return { ok: true, missing: [] };
+  const userIds = getUserQualiIds(user);
+  const missing = required.filter((q) => !userIds.has(q.id));
+  return { ok: missing.length === 0, missing };
+}
 
 // ----------------------------------------------------------------
 // Helpers
@@ -122,7 +145,7 @@ export function EinteilenEditor({
   // Actions
   // ----------------------------------------------------------------
 
-  async function handleAssign(fahrzeugPositionId: string) {
+  async function handleAssign(fahrzeugPositionId: string, pos?: FahrzeugPositionData) {
     if (!selectedUserId || !dienstplan) return;
 
     // Angestellter-Check
@@ -133,6 +156,17 @@ export function EinteilenEditor({
     ) {
       toast.error("Angestellte koennen nur in einer Schicht eingeteilt werden.");
       return;
+    }
+
+    // Quali-Check (Warnung, kein Block)
+    if (user && pos) {
+      const { ok, missing } = checkQualiMatch(user, pos);
+      if (!ok) {
+        toast.warning(
+          `Fehlende Qualifikation: ${missing.map((q) => q.kuerzel).join(", ")}`,
+          { duration: 4000 }
+        );
+      }
     }
 
     setSavingPositionId(fahrzeugPositionId);
@@ -420,22 +454,46 @@ export function EinteilenEditor({
                         {fahrzeug.positionen.map((pos) => {
                           const zuweisung = zuweisungByPosition.get(pos.id);
                           const isSaving = savingPositionId === pos.id || savingPositionId === zuweisung?.id;
+                          const requiredQualis = getRequiredQualis(pos);
+                          // Check if assigned user meets requirements
+                          const assignedUser = zuweisung ? verfuegbareKollegen.find((u) => u.id === zuweisung.userId) : null;
+                          const qualiMismatch = zuweisung && assignedUser ? !checkQualiMatch(assignedUser, pos).ok : false;
 
                           return (
                             <div
                               key={pos.id}
-                              className="flex items-center gap-2 rounded px-2 py-1.5 text-sm"
+                              className={`flex items-center gap-2 rounded px-2 py-1.5 text-sm ${
+                                qualiMismatch ? "bg-amber-50 border border-amber-200" : ""
+                              }`}
                             >
-                              {/* Positionsname */}
-                              <span className="w-28 shrink-0 text-xs font-medium text-slate-500">
-                                {pos.name}
-                              </span>
+                              {/* Positionsname + Required Qualis */}
+                              <div className="w-32 shrink-0">
+                                <span className="text-xs font-medium text-slate-500">
+                                  {pos.name}
+                                </span>
+                                {requiredQualis.length > 0 && (
+                                  <div className="flex gap-0.5 mt-0.5">
+                                    {requiredQualis.map((q) => (
+                                      <span
+                                        key={q.id}
+                                        className="inline-block rounded px-1 py-0 text-[8px] font-medium text-white"
+                                        style={{ backgroundColor: q.farbe }}
+                                      >
+                                        {q.kuerzel}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
 
                               {isSaving ? (
                                 <Loader2 className="size-4 animate-spin text-slate-400" />
                               ) : zuweisung ? (
                                 /* Besetzt */
                                 <div className="flex items-center gap-2 flex-1">
+                                  {qualiMismatch && (
+                                    <AlertTriangle className="size-3.5 shrink-0 text-amber-500" />
+                                  )}
                                   <span className="text-sm font-medium text-slate-900">
                                     {zuweisung.user.nachname},{" "}
                                     {zuweisung.user.vorname}
@@ -482,7 +540,7 @@ export function EinteilenEditor({
                               ) : (
                                 /* Leer - klickbar */
                                 <button
-                                  onClick={() => handleAssign(pos.id)}
+                                  onClick={() => handleAssign(pos.id, pos)}
                                   disabled={!selectedUserId}
                                   className={`flex-1 rounded border border-dashed px-2 py-1 text-xs transition-colors ${
                                     selectedUserId

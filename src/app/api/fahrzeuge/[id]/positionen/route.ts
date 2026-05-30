@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createPositionSchema, deletePositionSchema } from "@/lib/validations";
+import { requireRole } from "@/lib/permissions";
 
 export async function POST(
   request: NextRequest,
@@ -13,9 +14,8 @@ export async function POST(
       return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
     }
 
-    if (session.user.rolle !== "ADMIN") {
-      return NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 });
-    }
+    const denied = requireRole(session, "ADMIN");
+    if (denied) return denied;
 
     const { id: fahrzeugId } = await params;
     const body = await request.json();
@@ -37,10 +37,26 @@ export async function POST(
       return NextResponse.json({ error: "Fahrzeug nicht gefunden" }, { status: 404 });
     }
 
+    const { requiredQualifikationIds, ...posData } = parsed.data;
+
     const position = await prisma.fahrzeugPosition.create({
       data: {
-        ...parsed.data,
+        ...posData,
         fahrzeugId,
+        ...(requiredQualifikationIds && requiredQualifikationIds.length > 0
+          ? {
+              requiredQualifikationen: {
+                create: requiredQualifikationIds.map((qId: string) => ({
+                  qualifikationId: qId,
+                })),
+              },
+            }
+          : {}),
+      },
+      include: {
+        requiredQualifikationen: {
+          include: { qualifikation: true },
+        },
       },
     });
 
@@ -70,9 +86,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
     }
 
-    if (session.user.rolle !== "ADMIN") {
-      return NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 });
-    }
+    const denied = requireRole(session, "ADMIN");
+    if (denied) return denied;
 
     const { id: fahrzeugId } = await params;
     const body = await request.json();

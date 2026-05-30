@@ -12,6 +12,7 @@ datasource db {
 // ============================================================
 
 enum Rolle {
+  SYSOP
   ADMIN
   KOLLEGE
 }
@@ -54,7 +55,8 @@ model Qualifikation {
   name    String         // "Notfallsanitäter", "Rettungssanitäter", etc.
   farbe   String @default("#6b7280") // Hex-Farbe für Badge
 
-  users UserQualifikation[]
+  users                 UserQualifikation[]
+  positionsAnforderungen PositionQualifikation[]
 
   @@map("dp_qualifikation")
 }
@@ -135,11 +137,24 @@ model FahrzeugPosition {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  fahrzeug    Fahrzeug    @relation(fields: [fahrzeugId], references: [id], onDelete: Cascade)
-  zuweisungen Zuweisung[]
+  fahrzeug               Fahrzeug                @relation(fields: [fahrzeugId], references: [id], onDelete: Cascade)
+  zuweisungen            Zuweisung[]
+  requiredQualifikationen PositionQualifikation[]
 
   @@unique([fahrzeugId, name])
   @@map("dp_fahrzeug_position")
+}
+
+// --- PositionQualifikation (Join: Position ↔ erforderliche Qualifikation) ---
+model PositionQualifikation {
+  positionId      String
+  qualifikationId String
+
+  position      FahrzeugPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  qualifikation Qualifikation    @relation(fields: [qualifikationId], references: [id], onDelete: Cascade)
+
+  @@id([positionId, qualifikationId])
+  @@map("dp_position_qualifikation")
 }
 
 // --- Sonderfunktion ---

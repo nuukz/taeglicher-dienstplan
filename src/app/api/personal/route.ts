@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { hash } from "bcryptjs";
 import { createUserSchema } from "@/lib/validations";
+import { requireRole } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,9 +49,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
     }
 
-    if (session.user.rolle !== "ADMIN") {
-      return NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 });
-    }
+    const denied = requireRole(session, "ADMIN");
+    if (denied) return denied;
 
     const body = await request.json();
     const parsed = createUserSchema.safeParse(body);

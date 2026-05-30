@@ -47,6 +47,34 @@ export default function LoginPage() {
     }
   }
 
+  const quickLogins = [
+    { label: "Admin WA1", sublabel: "M. Weber", email: "admin@feuerwehr.de", password: "admin123" },
+    { label: "Admin WA2", sublabel: "O. Richter", email: "o.richter@feuerwehr.de", password: "admin123" },
+    { label: "Admin WA3", sublabel: "J. Schaefer", email: "j.schaefer@feuerwehr.de", password: "admin123" },
+  ];
+
+  async function handleQuickLogin(qEmail: string, qPassword: string) {
+    setError("");
+    setLoading(true);
+    try {
+      const result = await signIn("credentials", {
+        email: qEmail,
+        password: qPassword,
+        redirect: false,
+      });
+      if (result?.error) {
+        setError("Login fehlgeschlagen");
+        setLoading(false);
+        return;
+      }
+      router.push("/dienstplan");
+      router.refresh();
+    } catch {
+      setError("Login fehlgeschlagen");
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="w-full max-w-sm px-4">
       <Card>
@@ -74,7 +102,44 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="flex flex-col gap-5">
+          {/* SYSOP Quick-Login */}
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-medium text-slate-500 text-center">Schnell-Login</p>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleQuickLogin("sysop@shifthero.de", "sysop123")}
+              className="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-slate-900 px-3 py-2.5 text-center transition-colors hover:bg-slate-800 disabled:opacity-50"
+            >
+              <span className="text-xs font-semibold text-white">SYSOP</span>
+              <span className="text-[10px] text-slate-400">System-Admin</span>
+            </button>
+
+            {/* WA Quick-Login Buttons */}
+            <div className="grid grid-cols-3 gap-2">
+              {quickLogins.map((q) => (
+                <button
+                  key={q.email}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => handleQuickLogin(q.email, q.password)}
+                  className="flex flex-col items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-3 text-center transition-colors hover:border-[#8B1A1A]/30 hover:bg-red-50 disabled:opacity-50"
+                >
+                  <span className="text-xs font-semibold text-slate-700">{q.label}</span>
+                  <span className="text-[10px] text-slate-400">{q.sublabel}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs text-slate-400">oder</span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          {/* Manuelles Login */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {error && (
               <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -92,7 +157,6 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                autoFocus
               />
             </div>
 

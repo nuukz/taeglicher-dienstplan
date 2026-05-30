@@ -7,7 +7,7 @@ export const createUserSchema = z.object({
   passwort: z.string().min(8, "Passwort muss mindestens 8 Zeichen haben"),
   vorname: z.string().min(1, "Vorname ist erforderlich"),
   nachname: z.string().min(1, "Nachname ist erforderlich"),
-  rolle: z.enum(["ADMIN", "KOLLEGE"]).default("KOLLEGE"),
+  rolle: z.enum(["SYSOP", "ADMIN", "KOLLEGE"]).default("KOLLEGE"),
   beschaeftigung: z.enum(["BEAMTER", "ANGESTELLTER"]),
   abteilungId: z.string().min(1, "Wachabteilung ist erforderlich"),
 });
@@ -17,7 +17,7 @@ export const updateUserSchema = z.object({
   passwort: z.string().min(8, "Passwort muss mindestens 8 Zeichen haben").optional(),
   vorname: z.string().min(1).optional(),
   nachname: z.string().min(1).optional(),
-  rolle: z.enum(["ADMIN", "KOLLEGE"]).optional(),
+  rolle: z.enum(["SYSOP", "ADMIN", "KOLLEGE"]).optional(),
   beschaeftigung: z.enum(["BEAMTER", "ANGESTELLTER"]).optional(),
   abteilungId: z.string().min(1).optional(),
   aktiv: z.boolean().optional(),
@@ -41,6 +41,7 @@ export const updateFahrzeugSchema = z.object({
 export const createPositionSchema = z.object({
   name: z.string().min(1, "Positionsname ist erforderlich"),
   reihenfolge: z.number().int().default(0),
+  requiredQualifikationIds: z.array(z.string()).optional(),
 });
 
 export const deletePositionSchema = z.object({

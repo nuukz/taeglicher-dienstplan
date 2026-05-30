@@ -17,7 +17,7 @@ export interface UserData {
   vorname: string;
   nachname: string;
   email: string;
-  rolle: "ADMIN" | "KOLLEGE";
+  rolle: "SYSOP" | "ADMIN" | "KOLLEGE";
   beschaeftigung: "BEAMTER" | "ANGESTELLTER";
   aktiv: boolean;
   abteilungId: string;
@@ -38,6 +38,7 @@ export interface FahrzeugPositionData {
   name: string;
   fahrzeugId: string;
   reihenfolge: number;
+  requiredQualifikationen?: { qualifikation: QualifikationData }[];
 }
 
 export interface SonderfunktionData {

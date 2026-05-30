@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { updateSonderfunktionSchema } from "@/lib/validations";
+import { requireRole } from "@/lib/permissions";
 
 export async function PATCH(
   request: NextRequest,
@@ -13,9 +14,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
     }
 
-    if (session.user.rolle !== "ADMIN") {
-      return NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 });
-    }
+    const denied = requireRole(session, "ADMIN");
+    if (denied) return denied;
 
     const { id } = await params;
     const body = await request.json();
@@ -56,9 +56,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
     }
 
-    if (session.user.rolle !== "ADMIN") {
-      return NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 });
-    }
+    const denied = requireRole(session, "ADMIN");
+    if (denied) return denied;
 
     const { id } = await params;
 

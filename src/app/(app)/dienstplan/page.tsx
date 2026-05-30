@@ -390,7 +390,7 @@ export default function DienstplanPage() {
             </Button>
           )}
 
-          {session?.user?.rolle === "ADMIN" && (
+          {session?.user?.rolle && session.user.rolle !== "KOLLEGE" && (
             <Button
               variant="default"
               onClick={() =>

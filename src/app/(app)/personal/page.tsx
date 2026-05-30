@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, UserX, UserCheck, Loader2, X } from "lucide-react";
+import { Plus, Pencil, UserX, UserCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -70,6 +70,7 @@ interface FormData {
   rolle: "SYSOP" | "ADMIN" | "KOLLEGE";
   beschaeftigung: "BEAMTER" | "ANGESTELLTER";
   abteilungId: string;
+  qualifikationIds: string[];
 }
 
 const emptyForm: FormData = {
@@ -80,6 +81,7 @@ const emptyForm: FormData = {
   rolle: "KOLLEGE",
   beschaeftigung: "BEAMTER",
   abteilungId: "",
+  qualifikationIds: [],
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -103,11 +105,6 @@ export default function PersonalPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<PersonalUser | null>(null);
   const [form, setForm] = useState<FormData>(emptyForm);
-
-  // Detail dialog state (Kollegenmaske)
-  const [detailUser, setDetailUser] = useState<PersonalUser | null>(null);
-  const [detailQualis, setDetailQualis] = useState<string[]>([]);
-  const [savingQualis, setSavingQualis] = useState(false);
 
   // Filter
   const [filterAbteilung, setFilterAbteilung] = useState<string>("alle");
@@ -157,6 +154,7 @@ export default function PersonalPage() {
     setForm({
       ...emptyForm,
       abteilungId: abteilungen[0]?.id ?? "",
+      qualifikationIds: [],
     });
     setDialogOpen(true);
   }
@@ -171,6 +169,7 @@ export default function PersonalPage() {
       rolle: user.rolle,
       beschaeftigung: user.beschaeftigung,
       abteilungId: user.abteilungId,
+      qualifikationIds: (user.qualifikationen || []).map((q) => q.qualifikation.id),
     });
     setDialogOpen(true);
   }
@@ -180,7 +179,10 @@ export default function PersonalPage() {
     setSaving(true);
 
     try {
+      let userId: string;
+
       if (editingUser) {
+        userId = editingUser.id;
         const body: Record<string, unknown> = {
           vorname: form.vorname,
           nachname: form.nachname,
@@ -201,7 +203,6 @@ export default function PersonalPage() {
           const data = await res.json();
           throw new Error(data.error || "Fehler beim Aktualisieren");
         }
-        toast.success(`${form.vorname} ${form.nachname} aktualisiert`);
       } else {
         if (!form.passwort) {
           toast.error("Passwort ist bei Neuanlage erforderlich");
@@ -209,19 +210,39 @@ export default function PersonalPage() {
           return;
         }
 
+        const { qualifikationIds: _, ...createData } = form;
         const res = await fetch("/api/personal", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
+          body: JSON.stringify(createData),
         });
 
         if (!res.ok) {
           const data = await res.json();
           throw new Error(data.error || "Fehler beim Erstellen");
         }
-        toast.success(`${form.vorname} ${form.nachname} angelegt`);
+
+        const created = await res.json();
+        userId = created.id;
       }
 
+      // Qualifikationen speichern
+      const qualiRes = await fetch(`/api/personal/${userId}/qualifikationen`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ qualifikationIds: form.qualifikationIds }),
+      });
+
+      if (!qualiRes.ok) {
+        const data = await qualiRes.json();
+        throw new Error(data.error || "Fehler beim Speichern der Qualifikationen");
+      }
+
+      toast.success(
+        editingUser
+          ? `${form.vorname} ${form.nachname} aktualisiert`
+          : `${form.vorname} ${form.nachname} angelegt`
+      );
       setDialogOpen(false);
       fetchData();
     } catch (err) {
@@ -255,51 +276,17 @@ export default function PersonalPage() {
   }
 
   // ----------------------------------------------------------
-  // Detail Dialog (Kollegenmaske) Handlers
-  // ----------------------------------------------------------
-
-  function openDetailDialog(user: PersonalUser) {
-    setDetailUser(user);
-    const userQualiIds = (user.qualifikationen || []).map((q) => q.qualifikation.id);
-    setDetailQualis(userQualiIds);
-  }
-
-  function toggleQuali(qualiId: string) {
-    setDetailQualis((prev) =>
-      prev.includes(qualiId)
-        ? prev.filter((id) => id !== qualiId)
-        : [...prev, qualiId]
-    );
-  }
-
-  async function handleSaveQualis() {
-    if (!detailUser) return;
-    setSavingQualis(true);
-    try {
-      const res = await fetch(`/api/personal/${detailUser.id}/qualifikationen`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ qualifikationIds: detailQualis }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Fehler beim Speichern");
-      }
-
-      toast.success("Qualifikationen gespeichert");
-      setDetailUser(null);
-      fetchData();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Fehler");
-    } finally {
-      setSavingQualis(false);
-    }
-  }
-
-  // ----------------------------------------------------------
   // Helpers
   // ----------------------------------------------------------
+
+  function toggleFormQuali(qualiId: string) {
+    setForm((f) => ({
+      ...f,
+      qualifikationIds: f.qualifikationIds.includes(qualiId)
+        ? f.qualifikationIds.filter((id) => id !== qualiId)
+        : [...f.qualifikationIds, qualiId],
+    }));
+  }
 
   function getUserQualis(user: PersonalUser): QualifikationData[] {
     return (user.qualifikationen || []).map((q) => q.qualifikation);
@@ -481,6 +468,38 @@ export default function PersonalPage() {
                 </div>
               </div>
 
+              {/* Qualifikationen */}
+              {alleQualis.length > 0 && (
+                <div className="mt-4">
+                  <Label className="mb-2 block">Qualifikationen</Label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {alleQualis.map((q) => {
+                      const isActive = form.qualifikationIds.includes(q.id);
+                      return (
+                        <button
+                          key={q.id}
+                          type="button"
+                          onClick={() => toggleFormQuali(q.id)}
+                          className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-sm transition-colors ${
+                            isActive
+                              ? "border-slate-400 bg-slate-50 font-medium"
+                              : "border-slate-200 text-slate-400 hover:border-slate-300"
+                          }`}
+                        >
+                          <span
+                            className={`inline-block size-3 rounded-sm ${isActive ? "" : "opacity-30"}`}
+                            style={{ backgroundColor: q.farbe }}
+                          />
+                          <span className={isActive ? "text-slate-900" : "text-slate-400"}>
+                            {q.kuerzel}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <DialogFooter className="mt-6">
                 <Button type="submit" disabled={saving}>
                   {saving && <Loader2 className="size-4 animate-spin" />}
@@ -540,7 +559,7 @@ export default function PersonalPage() {
                   <TableRow
                     key={user.id}
                     className={`cursor-pointer ${!user.aktiv ? "opacity-50" : ""}`}
-                    onClick={() => openDetailDialog(user)}
+                    onClick={() => openEditDialog(user)}
                   >
                     <TableCell className="font-medium">
                       {user.vorname} {user.nachname}
@@ -627,7 +646,7 @@ export default function PersonalPage() {
             <div
               key={`mobile-${user.id}`}
               className={`rounded-lg border bg-white p-4 cursor-pointer ${!user.aktiv ? "opacity-50" : ""}`}
-              onClick={() => openDetailDialog(user)}
+              onClick={() => openEditDialog(user)}
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -684,84 +703,6 @@ export default function PersonalPage() {
         })}
       </div>
 
-      {/* ============ Kollegenmaske (Detail-Dialog) ============ */}
-      {detailUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="relative mx-4 w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
-            <button
-              onClick={() => setDetailUser(null)}
-              className="absolute right-4 top-4 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-            >
-              <X className="size-5" />
-            </button>
-
-            {/* Header */}
-            <div className="mb-5">
-              <h2 className="text-lg font-bold text-slate-900">
-                {detailUser.vorname} {detailUser.nachname}
-              </h2>
-              <p className="text-sm text-slate-500">{detailUser.email}</p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <Badge variant="outline">WA {detailUser.abteilung.name}</Badge>
-                <Badge variant={detailUser.rolle === "KOLLEGE" ? "secondary" : "default"}>
-                  {ROLE_LABELS[detailUser.rolle]}
-                </Badge>
-                <Badge variant="outline">
-                  {detailUser.beschaeftigung === "BEAMTER" ? "Beamter" : "Angestellter"}
-                </Badge>
-                {detailUser.aktiv ? (
-                  <Badge className="bg-emerald-100 text-emerald-700">Aktiv</Badge>
-                ) : (
-                  <Badge variant="secondary">Inaktiv</Badge>
-                )}
-              </div>
-            </div>
-
-            {/* Qualifikationen Grid */}
-            <div>
-              <h3 className="mb-3 text-sm font-semibold text-slate-700">
-                Qualifikationen
-              </h3>
-              <div className="grid grid-cols-3 gap-2">
-                {alleQualis.map((q) => {
-                  const isActive = detailQualis.includes(q.id);
-                  return (
-                    <button
-                      key={q.id}
-                      type="button"
-                      onClick={() => toggleQuali(q.id)}
-                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
-                        isActive
-                          ? "border-slate-400 bg-slate-50 font-medium"
-                          : "border-slate-200 text-slate-400 hover:border-slate-300"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block size-3 rounded-sm ${isActive ? "" : "opacity-30"}`}
-                        style={{ backgroundColor: q.farbe }}
-                      />
-                      <span className={isActive ? "text-slate-900" : "text-slate-400"}>
-                        {q.kuerzel}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="mt-6 flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setDetailUser(null)}>
-                Abbrechen
-              </Button>
-              <Button onClick={handleSaveQualis} disabled={savingQualis}>
-                {savingQualis && <Loader2 className="size-4 animate-spin" />}
-                Qualifikationen speichern
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

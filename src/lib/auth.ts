@@ -25,7 +25,12 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
           where: { email },
         });
 
-        if (!user || !user.aktiv) {
+        if (!user) {
+          return null;
+        }
+
+        // Inaktive User duerfen nicht einloggen, ausser SYSOP
+        if (!user.aktiv && user.rolle !== "SYSOP") {
           return null;
         }
 

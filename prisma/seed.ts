@@ -42,13 +42,11 @@ async function main() {
     { kuerzel: "RA", name: "Rettungsassistent", farbe: "#d97706" },
     { kuerzel: "AGT", name: "Atemschutzgeräteträger", farbe: "#2563eb" },
     { kuerzel: "Masch", name: "Maschinist", farbe: "#7c3aed" },
-    { kuerzel: "GF", name: "Gruppenführer", farbe: "#059669" },
     { kuerzel: "ZF", name: "Zugführer", farbe: "#0d9488" },
     { kuerzel: "TF", name: "Truppführer", farbe: "#4f46e5" },
     { kuerzel: "TM", name: "Truppmann", farbe: "#6b7280" },
     { kuerzel: "RdF", name: "Rettungsdienstfortbildung", farbe: "#be185d" },
     { kuerzel: "CSA", name: "Chemikalienschutzanzug", farbe: "#b45309" },
-    { kuerzel: "HöRe", name: "Höhenretter", farbe: "#0369a1" },
   ];
 
   const qualiMap: Record<string, string> = {};
@@ -178,19 +176,19 @@ async function main() {
   // =============================================
   const abt1Users: UserDef[] = [
     // Admin / C-Dienst
-    { email: "admin@feuerwehr.de", vorname: "Marco", nachname: "Weber", rolle: Rolle.ADMIN, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, pw: adminPasswort, qualifikationen: ["NotSan", "GF", "ZF", "AGT", "Masch"] },
+    { email: "admin@feuerwehr.de", vorname: "Marco", nachname: "Weber", rolle: Rolle.ADMIN, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, pw: adminPasswort, qualifikationen: ["NotSan", "ZF", "AGT", "Masch"] },
     // Beamte
-    { email: "t.schneider@feuerwehr.de", vorname: "Thomas", nachname: "Schneider", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["NotSan", "GF", "AGT", "Masch"] },
+    { email: "t.schneider@feuerwehr.de", vorname: "Thomas", nachname: "Schneider", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["NotSan", "ZF", "AGT", "Masch"] },
     { email: "s.mueller@feuerwehr.de", vorname: "Stefan", nachname: "Müller", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["NotSan", "TF", "AGT"] },
-    { email: "m.fischer@feuerwehr.de", vorname: "Michael", nachname: "Fischer", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["RS", "GF", "AGT", "Masch"] },
+    { email: "m.fischer@feuerwehr.de", vorname: "Michael", nachname: "Fischer", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["RS", "ZF", "AGT", "Masch"] },
     { email: "d.wagner@feuerwehr.de", vorname: "Daniel", nachname: "Wagner", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["NotSan", "TF", "AGT"] },
     { email: "j.becker@feuerwehr.de", vorname: "Jens", nachname: "Becker", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["RS", "AGT", "Masch", "TF"] },
-    { email: "p.hoffmann@feuerwehr.de", vorname: "Patrick", nachname: "Hoffmann", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["NotSan", "GF", "AGT"] },
+    { email: "p.hoffmann@feuerwehr.de", vorname: "Patrick", nachname: "Hoffmann", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["NotSan", "ZF", "AGT"] },
     { email: "a.schulz@feuerwehr.de", vorname: "Andreas", nachname: "Schulz", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["RS", "AGT", "TM"] },
     { email: "c.koch@feuerwehr.de", vorname: "Christian", nachname: "Koch", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["RS", "AGT", "TM", "CSA"] },
     { email: "m.braun@feuerwehr.de", vorname: "Martin", nachname: "Braun", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["NotSan", "AGT", "TF"] },
     { email: "k.zimmermann@feuerwehr.de", vorname: "Kevin", nachname: "Zimmermann", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["RS", "AGT", "TM"] },
-    { email: "f.hartmann@feuerwehr.de", vorname: "Frank", nachname: "Hartmann", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["RS", "AGT", "TM", "HöRe"] },
+    { email: "f.hartmann@feuerwehr.de", vorname: "Frank", nachname: "Hartmann", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["RS", "AGT", "TM", "CSA"] },
     { email: "r.krause@feuerwehr.de", vorname: "René", nachname: "Krause", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["RS", "AGT", "Masch", "TF"] },
     { email: "t.lange@feuerwehr.de", vorname: "Tim", nachname: "Lange", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["NotSan", "AGT", "TF"] },
     { email: "l.werner@feuerwehr.de", vorname: "Lars", nachname: "Werner", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt1.id, qualifikationen: ["RS", "TM"] },
@@ -208,17 +206,17 @@ async function main() {
   // =============================================
   const abt2Users: UserDef[] = [
     // Admin
-    { email: "o.richter@feuerwehr.de", vorname: "Oliver", nachname: "Richter", rolle: Rolle.ADMIN, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, pw: adminPasswort, qualifikationen: ["NotSan", "GF", "ZF", "AGT", "Masch"] },
+    { email: "o.richter@feuerwehr.de", vorname: "Oliver", nachname: "Richter", rolle: Rolle.ADMIN, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, pw: adminPasswort, qualifikationen: ["NotSan", "ZF", "AGT", "Masch"] },
     // Beamte
-    { email: "m.vogt@feuerwehr.de", vorname: "Matthias", nachname: "Vogt", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["NotSan", "GF", "AGT", "Masch"] },
+    { email: "m.vogt@feuerwehr.de", vorname: "Matthias", nachname: "Vogt", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["NotSan", "ZF", "AGT", "Masch"] },
     { email: "p.bergmann@feuerwehr.de", vorname: "Peter", nachname: "Bergmann", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["NotSan", "TF", "AGT"] },
-    { email: "s.koenig@feuerwehr.de", vorname: "Sascha", nachname: "König", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["RS", "GF", "AGT", "Masch"] },
+    { email: "s.koenig@feuerwehr.de", vorname: "Sascha", nachname: "König", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["RS", "ZF", "AGT", "Masch"] },
     { email: "a.frank@feuerwehr.de", vorname: "Alexander", nachname: "Frank", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["NotSan", "AGT", "TF"] },
     { email: "r.jung@feuerwehr.de", vorname: "Robert", nachname: "Jung", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["RS", "AGT", "Masch", "TF"] },
-    { email: "t.haas@feuerwehr.de", vorname: "Tobias", nachname: "Haas", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["NotSan", "GF", "AGT"] },
+    { email: "t.haas@feuerwehr.de", vorname: "Tobias", nachname: "Haas", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["NotSan", "ZF", "AGT"] },
     { email: "c.fuchs@feuerwehr.de", vorname: "Carsten", nachname: "Fuchs", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["RS", "AGT", "TM", "CSA"] },
     { email: "m.peters@feuerwehr.de", vorname: "Manuel", nachname: "Peters", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["RS", "AGT", "TM"] },
-    { email: "j.scholz@feuerwehr.de", vorname: "Julian", nachname: "Scholz", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["NotSan", "AGT", "TF", "HöRe"] },
+    { email: "j.scholz@feuerwehr.de", vorname: "Julian", nachname: "Scholz", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["NotSan", "AGT", "TF", "CSA"] },
     { email: "d.sommer@feuerwehr.de", vorname: "Dirk", nachname: "Sommer", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["RS", "AGT", "TM"] },
     { email: "h.winter@feuerwehr.de", vorname: "Hendrik", nachname: "Winter", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["RS", "AGT", "Masch", "TF"] },
     { email: "f.baumann@feuerwehr.de", vorname: "Florian", nachname: "Baumann", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt2.id, qualifikationen: ["RS", "TM"] },
@@ -237,14 +235,14 @@ async function main() {
   // =============================================
   const abt3Users: UserDef[] = [
     // Admin
-    { email: "j.schaefer@feuerwehr.de", vorname: "Jan", nachname: "Schäfer", rolle: Rolle.ADMIN, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, pw: adminPasswort, qualifikationen: ["NotSan", "GF", "ZF", "AGT", "Masch"] },
+    { email: "j.schaefer@feuerwehr.de", vorname: "Jan", nachname: "Schäfer", rolle: Rolle.ADMIN, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, pw: adminPasswort, qualifikationen: ["NotSan", "ZF", "AGT", "Masch"] },
     // Beamte
-    { email: "c.krueger@feuerwehr.de", vorname: "Chris", nachname: "Krüger", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["NotSan", "GF", "AGT", "Masch"] },
+    { email: "c.krueger@feuerwehr.de", vorname: "Chris", nachname: "Krüger", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["NotSan", "ZF", "AGT", "Masch"] },
     { email: "m.engel@feuerwehr.de", vorname: "Moritz", nachname: "Engel", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["NotSan", "TF", "AGT"] },
-    { email: "t.brandt@feuerwehr.de", vorname: "Thorsten", nachname: "Brandt", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["RA", "GF", "AGT", "Masch"] },
+    { email: "t.brandt@feuerwehr.de", vorname: "Thorsten", nachname: "Brandt", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["RA", "ZF", "AGT", "Masch"] },
     { email: "s.hahn@feuerwehr.de", vorname: "Stefan", nachname: "Hahn", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["NotSan", "TF", "AGT"] },
     { email: "a.vogel@feuerwehr.de", vorname: "Andre", nachname: "Vogel", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["RS", "AGT", "Masch", "TF"] },
-    { email: "r.weiss@feuerwehr.de", vorname: "Ralph", nachname: "Weiß", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["NotSan", "GF", "AGT", "HöRe"] },
+    { email: "r.weiss@feuerwehr.de", vorname: "Ralph", nachname: "Weiß", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["NotSan", "ZF", "AGT", "CSA"] },
     { email: "p.seidel@feuerwehr.de", vorname: "Philipp", nachname: "Seidel", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["RS", "AGT", "TM"] },
     { email: "d.ernst@feuerwehr.de", vorname: "David", nachname: "Ernst", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["RS", "AGT", "TM", "CSA"] },
     { email: "h.otto@feuerwehr.de", vorname: "Heiko", nachname: "Otto", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.BEAMTER, abteilungId: abt3.id, qualifikationen: ["NotSan", "AGT", "TF"] },
@@ -484,11 +482,11 @@ async function main() {
     { fahrzeug: "RTW Kaufmann", position: "Beifahrer", qualis: ["NotSan"] },
     // HLF: Maschinist braucht Masch, Fahrzeugfuehrer braucht GF
     { fahrzeug: "HLF", position: "Maschinist", qualis: ["Masch"] },
-    { fahrzeug: "HLF", position: "Fahrzeugführer", qualis: ["GF"] },
+    { fahrzeug: "HLF", position: "Fahrzeugführer", qualis: ["ZF"] },
     // DL: Maschinist braucht Masch
     { fahrzeug: "DL", position: "Maschinist", qualis: ["Masch"] },
     // ELW: C-Dienst braucht ZF oder GF
-    { fahrzeug: "ELW", position: "C-Dienst", qualis: ["GF"] },
+    { fahrzeug: "ELW", position: "C-Dienst", qualis: ["ZF"] },
   ];
 
   for (const pq of posQualiDefaults) {

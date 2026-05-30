@@ -82,6 +82,7 @@ function DienstplanBearbeitenInner() {
   const [fahrzeuge, setFahrzeuge] = useState<FahrzeugData[]>([]);
   const [sonderfunktionen, setSonderfunktionen] = useState<SonderfunktionData[]>([]);
   const [schichtZeiten, setSchichtZeiten] = useState<SchichtKonfiguration[]>([]);
+  const [abteilungName, setAbteilungName] = useState<string>("");
   const [dienstplanData, setDienstplanData] = useState<DienstplanResponse | null>(null);
   const [abwesenheiten, setAbwesenheiten] = useState<AbwesenheitData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,28 +111,35 @@ function DienstplanBearbeitenInner() {
     if (!abteilungId) return;
     setLoading(true);
     try {
-      const [fzRes, persRes, sfRes, zeitRes] = await Promise.all([
+      const [fzRes, persRes, sfRes, zeitRes, abtRes] = await Promise.all([
         fetch("/api/fahrzeuge"),
         fetch(`/api/personal?abteilung=${abteilungId}`),
         fetch("/api/sonderfunktionen"),
         fetch("/api/einstellungen"),
+        fetch("/api/abteilungen"),
       ]);
 
       if (!fzRes.ok || !persRes.ok || !sfRes.ok || !zeitRes.ok) {
         throw new Error("Stammdaten konnten nicht geladen werden");
       }
 
-      const [fzData, persData, sfData, zeitData] = await Promise.all([
+      const [fzData, persData, sfData, zeitData, abtData] = await Promise.all([
         fzRes.json(),
         persRes.json(),
         sfRes.json(),
         zeitRes.json(),
+        abtRes.ok ? abtRes.json() : [],
       ]);
 
       setFahrzeuge(fzData);
       setAllPersonal(persData);
       setSonderfunktionen(sfData);
       setSchichtZeiten(zeitData);
+
+      if (abtData.length > 0 && abteilungId) {
+        const abt = abtData.find((a: { id: string; name: string }) => a.id === abteilungId);
+        if (abt) setAbteilungName(abt.name);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Fehler beim Laden");
     } finally {
@@ -281,7 +289,7 @@ function DienstplanBearbeitenInner() {
             Dienstplan bearbeiten
           </h1>
           <p className="text-xs text-slate-500">
-            Wachabteilung {allPersonal[0]?.abteilungId ? "" : ""}
+            Wachabteilung {abteilungName}
           </p>
         </div>
       </div>

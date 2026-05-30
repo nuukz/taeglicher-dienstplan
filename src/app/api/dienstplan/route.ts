@@ -64,6 +64,11 @@ export async function GET(request: NextRequest) {
         },
         aenderungen: {
           orderBy: { createdAt: "desc" },
+          include: {
+            user: {
+              select: { vorname: true, nachname: true },
+            },
+          },
         },
       },
     });

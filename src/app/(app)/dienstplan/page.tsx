@@ -7,12 +7,14 @@ import { toast } from "sonner";
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Calendar,
   Truck,
   Loader2,
   Star,
   Pencil,
   FileDown,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -334,6 +336,20 @@ export default function DienstplanPage() {
   const anyVeroeffentlicht = tagVeroeffentlicht || nachtVeroeffentlicht;
   const allVeroeffentlicht = tagVeroeffentlicht && nachtVeroeffentlicht;
 
+  // Version: höchste Version von Tag/Nacht
+  const maxVersion = Math.max(
+    dienstplanData?.tag?.version ?? 0,
+    dienstplanData?.nacht?.version ?? 0,
+  );
+
+  // Alle Änderungen zusammenführen (Tag + Nacht), nach Datum sortiert
+  const alleAenderungen = [
+    ...(dienstplanData?.tag?.aenderungen ?? []),
+    ...(dienstplanData?.nacht?.aenderungen ?? []),
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const [expandedVersion, setExpandedVersion] = useState<string | null>(null);
+
   // ----------------------------------------------------------
   // Render
   // ----------------------------------------------------------
@@ -359,9 +375,16 @@ export default function DienstplanPage() {
         <div className="flex items-center gap-2">
           {dienstplanData?.tag || dienstplanData?.nacht ? (
             allVeroeffentlicht ? (
-              <Badge className="bg-emerald-100 text-emerald-700">
-                Veroeffentlicht
-              </Badge>
+              <>
+                <Badge className="bg-emerald-100 text-emerald-700">
+                  Veroeffentlicht
+                </Badge>
+                {maxVersion > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    v{maxVersion}
+                  </Badge>
+                )}
+              </>
             ) : anyVeroeffentlicht ? (
               <Badge className="bg-amber-100 text-amber-700">
                 Teilweise veroeffentlicht
@@ -460,6 +483,91 @@ export default function DienstplanPage() {
             fahrzeuge={fahrzeuge}
             currentUserId={session?.user?.id}
           />
+
+          {/* Änderungsverlauf */}
+          {alleAenderungen.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                  <History className="size-4" />
+                  Änderungsverlauf
+                </h2>
+                <div className="space-y-2">
+                  {alleAenderungen.map((aenderung) => {
+                    const isExpanded = expandedVersion === aenderung.id;
+                    const snapshot = aenderung.snapshot
+                      ? JSON.parse(aenderung.snapshot) as { user: string; fahrzeug: string; position: string }[]
+                      : null;
+                    const zeit = new Date(aenderung.createdAt);
+
+                    return (
+                      <div
+                        key={aenderung.id}
+                        className="rounded-lg border bg-white"
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedVersion(isExpanded ? null : aenderung.id)
+                          }
+                          className="flex w-full items-center justify-between px-4 py-3 text-left"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Badge variant="outline" className="text-xs">
+                              v{aenderung.version}
+                            </Badge>
+                            <div>
+                              <p className="text-sm font-medium text-slate-900">
+                                {aenderung.beschreibung}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {zeit.toLocaleDateString("de-DE", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                })}{" "}
+                                {zeit.toLocaleTimeString("de-DE", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                          {snapshot && (
+                            <ChevronDown
+                              className={`size-4 text-slate-400 transition-transform ${
+                                isExpanded ? "rotate-180" : ""
+                              }`}
+                            />
+                          )}
+                        </button>
+                        {isExpanded && snapshot && (
+                          <div className="border-t px-4 py-3">
+                            <div className="space-y-1">
+                              {snapshot.map((z, i) => (
+                                <div
+                                  key={i}
+                                  className="flex items-center justify-between text-sm"
+                                >
+                                  <span className="text-slate-500">
+                                    {z.fahrzeug} – {z.position}
+                                  </span>
+                                  <span className="font-medium text-slate-900">
+                                    {z.user}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

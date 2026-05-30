@@ -66,14 +66,26 @@ export interface TagesFahrzeugData {
   fahrzeug: FahrzeugData;
 }
 
+export interface DienstplanAenderungData {
+  id: string;
+  version: number;
+  userId: string | null;
+  beschreibung: string;
+  snapshot: string | null;
+  createdAt: string;
+  user?: { vorname: string; nachname: string } | null;
+}
+
 export interface DienstplanData {
   id: string;
   datum: string;
   schicht: "TAG" | "NACHT";
   abteilungId: string;
   veroeffentlicht: boolean;
+  version: number;
   zuweisungen: ZuweisungData[];
   tagesFahrzeuge: TagesFahrzeugData[];
+  aenderungen?: DienstplanAenderungData[];
 }
 
 export interface DienstplanResponse {

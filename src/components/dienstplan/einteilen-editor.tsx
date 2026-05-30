@@ -263,9 +263,10 @@ export function EinteilenEditor({
     }
   }
 
-  const anyUnpublished =
-    (tagDienstplan && !tagDienstplan.veroeffentlicht) ||
-    (nachtDienstplan && !nachtDienstplan.veroeffentlicht);
+  const allPublished =
+    (tagDienstplan?.veroeffentlicht ?? false) &&
+    (nachtDienstplan?.veroeffentlicht ?? false);
+  const anyExists = !!(tagDienstplan || nachtDienstplan);
 
   // Zaehler
   const totalPositions = activeFahrzeuge
@@ -292,19 +293,22 @@ export function EinteilenEditor({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {anyUnpublished && (
+          {anyExists && (
             <Button
               variant="default"
               onClick={onPublish}
               disabled={publishing}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className={allPublished
+                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                : "bg-red-600 hover:bg-red-700 text-white"
+              }
             >
               {publishing ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 <Send className="size-4" />
               )}
-              Veroeffentlichen
+              {allPublished ? "Aktualisieren & Senden" : "Veroeffentlichen"}
             </Button>
           )}
         </div>

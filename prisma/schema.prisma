@@ -87,11 +87,12 @@ model User {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  abteilung         Abteilung          @relation(fields: [abteilungId], references: [id])
+  abteilung         Abteilung              @relation(fields: [abteilungId], references: [id])
   zuweisungen       Zuweisung[]
   pushSubscriptions PushSubscription[]
   qualifikationen   UserQualifikation[]
   abwesenheiten     Abwesenheit[]
+  aenderungen       DienstplanAenderung[]
 
   @@map("dp_user")
 }
@@ -177,6 +178,7 @@ model Dienstplan {
   schicht       SchichtTyp
   abteilungId   String
   veroeffentlicht Boolean @default(false)
+  version       Int       @default(0)    // 0 = Entwurf, 1+ = veröffentlichte Version
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -228,10 +230,14 @@ model TagesFahrzeug {
 model DienstplanAenderung {
   id           String   @id @default(cuid())
   dienstplanId String
-  beschreibung String   // "Max Mustermann: HLF Maschinist → DL Maschinist"
+  version      Int      @default(0)    // Welche Version wurde veröffentlicht
+  userId       String?                 // Wer hat veröffentlicht
+  beschreibung String                  // "Veröffentlicht", "Aktualisiert" etc.
+  snapshot     String?                 // JSON: Zuweisungen zum Zeitpunkt der Veröffentlichung
   createdAt    DateTime @default(now())
 
   dienstplan Dienstplan @relation(fields: [dienstplanId], references: [id], onDelete: Cascade)
+  user       User?      @relation(fields: [userId], references: [id])
 
   @@map("dp_dienstplan_aenderung")
 }

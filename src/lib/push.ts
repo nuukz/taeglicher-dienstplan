@@ -120,7 +120,7 @@ export async function sendPushToAll(payload: PushPayload) {
 /**
  * Push an alle zugewiesenen User senden wenn Dienstplan veröffentlicht wird
  */
-export async function sendDienstplanPublished(dienstplanId: string) {
+export async function sendDienstplanPublished(dienstplanId: string, version: number = 1) {
   const dienstplan = await prisma.dienstplan.findUnique({
     where: { id: dienstplanId },
     include: {
@@ -143,6 +143,9 @@ export async function sendDienstplanPublished(dienstplanId: string) {
   }
 
   const schichtLabel = dienstplan.schicht === "TAG" ? "Tagschicht" : "Nachtschicht";
+  const title = version <= 1
+    ? "Dienstplan veröffentlicht"
+    : `Dienstplan aktualisiert (v${version})`;
 
   // Jedem zugewiesenen User eine individuelle Nachricht senden
   await Promise.allSettled(
@@ -151,7 +154,7 @@ export async function sendDienstplanPublished(dienstplanId: string) {
       const positionName = zuweisung.fahrzeugPosition.name;
 
       await sendPushToUser(zuweisung.userId, {
-        title: "Dienstplan veröffentlicht",
+        title,
         body: `Du bist eingeteilt: ${fahrzeugName} ${positionName} (${schichtLabel})`,
         url: "/dienstplan",
       });

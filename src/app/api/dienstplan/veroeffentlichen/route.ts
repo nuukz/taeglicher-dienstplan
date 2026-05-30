@@ -27,29 +27,69 @@ export async function POST(request: NextRequest) {
 
     const { dienstplanId } = parsed.data;
 
-    // Dienstplan veröffentlichen und Änderung loggen (in einer Transaktion)
+    // Dienstplan veröffentlichen mit Versionierung (in einer Transaktion)
     const dienstplan = await prisma.$transaction(async (tx) => {
+      // Aktuellen Dienstplan mit Zuweisungen laden
+      const current = await tx.dienstplan.findUnique({
+        where: { id: dienstplanId },
+        include: {
+          abteilung: true,
+          zuweisungen: {
+            include: {
+              user: { select: { vorname: true, nachname: true } },
+              fahrzeugPosition: {
+                include: { fahrzeug: { select: { name: true } } },
+              },
+            },
+          },
+        },
+      });
+
+      if (!current) {
+        throw new Error("Record to update not found");
+      }
+
+      const newVersion = current.version + 1;
+
+      // Snapshot der aktuellen Zuweisungen erstellen
+      const snapshot = current.zuweisungen.map((z) => ({
+        user: `${z.user.vorname} ${z.user.nachname}`,
+        fahrzeug: z.fahrzeugPosition.fahrzeug.name,
+        position: z.fahrzeugPosition.name,
+      }));
+
+      // Version inkrementieren + veröffentlichen
       const updated = await tx.dienstplan.update({
         where: { id: dienstplanId },
-        data: { veroeffentlicht: true },
+        data: {
+          veroeffentlicht: true,
+          version: newVersion,
+        },
         include: {
           abteilung: true,
         },
       });
 
-      // Änderung loggen
+      // Änderung mit Version, User und Snapshot loggen
+      const beschreibung = newVersion === 1
+        ? `Veröffentlicht von ${session.user.vorname} ${session.user.nachname}`
+        : `Aktualisiert (v${newVersion}) von ${session.user.vorname} ${session.user.nachname}`;
+
       await tx.dienstplanAenderung.create({
         data: {
           dienstplanId,
-          beschreibung: `Dienstplan veröffentlicht von ${session.user.vorname} ${session.user.nachname}`,
+          version: newVersion,
+          userId: session.user.id,
+          beschreibung,
+          snapshot: JSON.stringify(snapshot),
         },
       });
 
-      return updated;
+      return { ...updated, newVersion };
     });
 
-    // Push-Benachrichtigungen an alle zugewiesenen User senden (async, nicht blockierend)
-    sendDienstplanPublished(dienstplanId).catch((err) => {
+    // Push-Benachrichtigungen senden (async, nicht blockierend)
+    sendDienstplanPublished(dienstplanId, dienstplan.newVersion).catch((err) => {
       console.error("Push-Benachrichtigung fehlgeschlagen:", err);
     });
 

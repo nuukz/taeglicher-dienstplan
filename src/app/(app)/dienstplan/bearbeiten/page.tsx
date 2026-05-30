@@ -208,7 +208,7 @@ function DienstplanBearbeitenInner() {
     setPublishing(true);
     try {
       const promises = [];
-      if (dienstplanData?.tag && !dienstplanData.tag.veroeffentlicht) {
+      if (dienstplanData?.tag) {
         promises.push(
           fetch("/api/dienstplan/veroeffentlichen", {
             method: "POST",
@@ -217,7 +217,7 @@ function DienstplanBearbeitenInner() {
           })
         );
       }
-      if (dienstplanData?.nacht && !dienstplanData.nacht.veroeffentlicht) {
+      if (dienstplanData?.nacht) {
         promises.push(
           fetch("/api/dienstplan/veroeffentlichen", {
             method: "POST",
@@ -227,7 +227,7 @@ function DienstplanBearbeitenInner() {
         );
       }
       if (promises.length === 0) {
-        toast.info("Beide Schichten sind bereits veroeffentlicht.");
+        toast.info("Kein Dienstplan zum Veroeffentlichen vorhanden.");
         return;
       }
       const results = await Promise.all(promises);
@@ -237,7 +237,9 @@ function DienstplanBearbeitenInner() {
           throw new Error(data.error || "Fehler beim Veroeffentlichen");
         }
       }
-      toast.success("Dienstplan veroeffentlicht!");
+
+      const isUpdate = dienstplanData?.tag?.veroeffentlicht || dienstplanData?.nacht?.veroeffentlicht;
+      toast.success(isUpdate ? "Dienstplan aktualisiert & gesendet!" : "Dienstplan veroeffentlicht!");
       fetchDienstplan();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Fehler");

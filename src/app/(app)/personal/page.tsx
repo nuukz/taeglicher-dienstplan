@@ -472,7 +472,7 @@ export default function PersonalPage() {
               {alleQualis.length > 0 && (
                 <div className="mt-4">
                   <Label className="mb-2 block">Qualifikationen</Label>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-2 gap-1.5">
                     {alleQualis.map((q) => {
                       const isActive = form.qualifikationIds.includes(q.id);
                       return (
@@ -487,11 +487,11 @@ export default function PersonalPage() {
                           }`}
                         >
                           <span
-                            className={`inline-block size-3 rounded-sm ${isActive ? "" : "opacity-30"}`}
+                            className={`inline-block size-3 rounded-sm shrink-0 ${isActive ? "" : "opacity-30"}`}
                             style={{ backgroundColor: q.farbe }}
                           />
                           <span className={isActive ? "text-slate-900" : "text-slate-400"}>
-                            {q.kuerzel}
+                            {q.name}
                           </span>
                         </button>
                       );

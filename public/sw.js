@@ -1,7 +1,7 @@
 // Service Worker für Dienstplan-App
 // Push-Benachrichtigungen + einfacher Offline-Fallback
 
-const CACHE_NAME = "dienstplan-v1";
+const CACHE_NAME = "dienstplan-v2";
 
 // --- Lifecycle ---
 

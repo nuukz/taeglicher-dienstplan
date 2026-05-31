@@ -15,14 +15,14 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  const { vorname, rolle } = session.user;
+  const { vorname, rolle, abteilungName } = session.user;
 
   return (
     <div className="flex h-dvh flex-col md:flex-row">
-      <DesktopSidebar vorname={vorname} rolle={rolle as Rolle} />
+      <DesktopSidebar vorname={vorname} rolle={rolle as Rolle} abteilungName={abteilungName} />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <MobileHeader vorname={vorname} rolle={rolle as Rolle} />
+        <MobileHeader vorname={vorname} rolle={rolle as Rolle} abteilungName={abteilungName} />
 
         <main className="flex-1 overflow-y-auto bg-slate-50 p-4 pb-20 md:p-6 md:pb-6">
           <PushPrompt />

@@ -525,7 +525,7 @@ export default function PersonalPage() {
             const count = users.filter((u) => u.abteilungId === abt.id).length;
             return (
               <TabsTrigger key={abt.id} value={abt.id}>
-                {abt.name} ({count})
+                WA {abt.name} ({count})
               </TabsTrigger>
             );
           })}

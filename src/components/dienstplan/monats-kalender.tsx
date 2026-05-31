@@ -5,21 +5,31 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // ----------------------------------------------------------------
-// Dienstrhythmus: 3-Tage-Rotation (24h Dienst / 48h frei)
-// Referenzdatum: 30.05.2026 = WA "1" (Index 0)
+// Dienstrhythmus: 21-Tage-Zyklus (3 Wochen)
+// Wochenmuster einer WA: Mo, Fr, So, Mi, Sa, Di, Do
+// Die anderen WAs fuellen die Tage dazwischen.
+// Referenz-Montag: 01.06.2026 = Start mit WA 2
 // ----------------------------------------------------------------
 
-const REFERENCE_DATE = new Date(2026, 4, 30); // 30. Mai 2026
+const REFERENCE_MONDAY = new Date(2026, 5, 1); // 1. Juni 2026 (Montag)
 const WA_NAMES = ["1", "2", "3"];
 
+// Basis-Wochenmuster (Mo-So) als WA-Indizes fuer Woche 0:
+// Mo=WA2(1), Di=WA1(0), Mi=WA3(2), Do=WA1(0), Fr=WA2(1), Sa=WA3(2), So=WA2(1)
+const BASE_PATTERN = [1, 0, 2, 0, 1, 2, 1];
+
 function getWAIndex(date: Date): number {
-  const ref = new Date(REFERENCE_DATE);
+  const ref = new Date(REFERENCE_MONDAY);
   ref.setHours(0, 0, 0, 0);
   const target = new Date(date);
   target.setHours(0, 0, 0, 0);
   const diffMs = target.getTime() - ref.getTime();
   const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-  return ((diffDays % 3) + 3) % 3;
+  // Wochentag (0=Mo, 6=So)
+  const dayOfWeek = ((diffDays % 7) + 7) % 7;
+  // Wochen-Offset im 3-Wochen-Zyklus
+  const weekOffset = ((Math.floor(diffDays / 7) % 3) + 3) % 3;
+  return (BASE_PATTERN[dayOfWeek] - weekOffset + 3) % 3;
 }
 
 function getDaysInMonth(year: number, month: number): number {

@@ -191,8 +191,8 @@ export function VerfuegbarkeitEditor({
                   <Select
                     onValueChange={(v) => { if (v) handleSetAbwesend(user.id, String(v)); }}
                   >
-                    <SelectTrigger className="w-36 h-8 text-xs">
-                      <SelectValue placeholder="Abwesend..." />
+                    <SelectTrigger className="w-36 h-8 text-xs border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100">
+                      <SelectValue placeholder="Verfuegbar ✓" />
                     </SelectTrigger>
                     <SelectContent>
                       {ABWESENHEITS_GRUENDE.map((g) => (

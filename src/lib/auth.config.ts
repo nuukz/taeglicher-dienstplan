@@ -19,6 +19,7 @@ export const authConfig: NextAuthConfig = {
         token.vorname = user.vorname as string;
         token.nachname = user.nachname as string;
         token.abteilungId = user.abteilungId as string;
+        token.abteilungName = user.abteilungName as string;
       }
       return token;
     },
@@ -28,6 +29,7 @@ export const authConfig: NextAuthConfig = {
       session.user.vorname = token.vorname as string;
       session.user.nachname = token.nachname as string;
       session.user.abteilungId = token.abteilungId as string;
+      session.user.abteilungName = token.abteilungName as string;
       return session;
     },
     authorized({ auth, request: { nextUrl } }) {

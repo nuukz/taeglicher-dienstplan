@@ -88,17 +88,21 @@ function NavLinkMobile({ href, label, icon: Icon }: { href: string; label: strin
 interface AppNavProps {
   vorname: string;
   rolle: Rolle;
+  abteilungName: string;
 }
 
-export function DesktopSidebar({ vorname, rolle }: AppNavProps) {
+export function DesktopSidebar({ vorname, rolle, abteilungName }: AppNavProps) {
   const visibleNavItems = allNavItems.filter((item) => hasMinRole(rolle, item.minRole));
 
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:bg-slate-900">
-      <div className="flex h-16 items-center gap-3 border-b border-slate-800 px-6">
+      <Link href="/dienstplan" className="flex h-16 items-center gap-3 border-b border-slate-800 px-6 hover:bg-slate-800 transition-colors">
         <CalendarDays className="size-6 text-red-500" />
-        <h1 className="text-lg font-bold text-white">WachPlan</h1>
-      </div>
+        <div>
+          <h1 className="text-lg font-bold text-white leading-tight">WachPlan</h1>
+          <p className="text-[10px] text-slate-400">WA {abteilungName}</p>
+        </div>
+      </Link>
       <nav className="flex-1 space-y-1 px-3 py-4">
         {visibleNavItems.map((item) => (
           <NavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />
@@ -120,7 +124,7 @@ export function DesktopSidebar({ vorname, rolle }: AppNavProps) {
   );
 }
 
-export function MobileHeader({ vorname, rolle }: AppNavProps) {
+export function MobileHeader({ vorname, rolle, abteilungName }: AppNavProps) {
   const visibleNavItems = allNavItems.filter((item) => hasMinRole(rolle, item.minRole));
 
   return (
@@ -137,10 +141,13 @@ export function MobileHeader({ vorname, rolle }: AppNavProps) {
           </SheetTrigger>
           <SheetContent side="left" className="w-64 bg-slate-900 p-0 border-slate-800">
             <SheetTitle className="sr-only">Navigation</SheetTitle>
-            <div className="flex h-14 items-center gap-3 border-b border-slate-800 px-6">
+            <Link href="/dienstplan" className="flex h-14 items-center gap-3 border-b border-slate-800 px-6 hover:bg-slate-800 transition-colors">
               <CalendarDays className="size-6 text-red-500" />
-              <span className="text-lg font-bold text-white">WachPlan</span>
-            </div>
+              <div>
+                <span className="text-lg font-bold text-white">WachPlan</span>
+                <p className="text-[10px] text-slate-400">WA {abteilungName}</p>
+              </div>
+            </Link>
             <nav className="space-y-1 px-3 py-4">
               {visibleNavItems.map((item) => (
                 <NavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />
@@ -151,7 +158,9 @@ export function MobileHeader({ vorname, rolle }: AppNavProps) {
             </div>
           </SheetContent>
         </Sheet>
-        <h1 className="text-base font-bold text-white">WachPlan</h1>
+        <Link href="/dienstplan" className="text-base font-bold text-white hover:text-slate-200">
+          WachPlan <span className="text-xs font-normal text-slate-400">WA {abteilungName}</span>
+        </Link>
       </div>
       <div className="flex items-center gap-2">
         <span className="text-sm text-slate-300">{vorname}</span>

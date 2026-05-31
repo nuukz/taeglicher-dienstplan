@@ -7,6 +7,7 @@ declare module "next-auth" {
     vorname: string;
     nachname: string;
     abteilungId: string;
+    abteilungName: string;
   }
 
   interface Session {
@@ -16,6 +17,7 @@ declare module "next-auth" {
       vorname: string;
       nachname: string;
       abteilungId: string;
+      abteilungName: string;
     } & DefaultSession["user"];
   }
 }
@@ -27,5 +29,6 @@ declare module "next-auth/jwt" {
     vorname: string;
     nachname: string;
     abteilungId: string;
+    abteilungName: string;
   }
 }

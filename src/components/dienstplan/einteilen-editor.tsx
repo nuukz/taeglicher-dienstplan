@@ -97,8 +97,8 @@ export function EinteilenEditor({
   onPublish,
 }: EinteilenEditorProps) {
   const [activeSchicht, setActiveSchicht] = useState<"TAG" | "NACHT">("TAG");
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [savingPositionId, setSavingPositionId] = useState<string | null>(null);
+  const [dragOverPositionId, setDragOverPositionId] = useState<string | null>(null);
 
   const dienstplan =
     activeSchicht === "TAG" ? tagDienstplan : nachtDienstplan;
@@ -155,14 +155,14 @@ export function EinteilenEditor({
   // Actions
   // ----------------------------------------------------------------
 
-  async function handleAssign(fahrzeugPositionId: string, pos?: FahrzeugPositionData) {
-    if (!selectedUserId || !dienstplan) return;
+  async function handleAssign(userId: string, fahrzeugPositionId: string, pos: FahrzeugPositionData) {
+    if (!dienstplan) return;
 
     // Angestellter/Azubi-Check
-    const user = verfuegbareKollegen.find((u) => u.id === selectedUserId);
+    const user = verfuegbareKollegen.find((u) => u.id === userId);
     if (
       (user?.beschaeftigung === "ANGESTELLTER" || user?.beschaeftigung === "AZUBI") &&
-      otherSchichtUserIds.has(selectedUserId)
+      otherSchichtUserIds.has(userId)
     ) {
       toast.error(
         user.beschaeftigung === "AZUBI"
@@ -173,7 +173,7 @@ export function EinteilenEditor({
     }
 
     // Quali-Check (Warnung, kein Block)
-    if (user && pos) {
+    if (user) {
       const { ok, missing } = checkQualiMatch(user, pos);
       if (!ok) {
         toast.warning(
@@ -190,7 +190,7 @@ export function EinteilenEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           dienstplanId: dienstplan.id,
-          userId: selectedUserId,
+          userId,
           fahrzeugPositionId,
         }),
       });
@@ -198,7 +198,6 @@ export function EinteilenEditor({
         const data = await res.json();
         throw new Error(data.error || "Fehler beim Zuweisen");
       }
-      setSelectedUserId(null);
       onZuweisungChanged();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Fehler");
@@ -331,10 +330,7 @@ export function EinteilenEditor({
       {/* Schicht Tabs */}
       <Tabs
         value={activeSchicht}
-        onValueChange={(v) => {
-          setActiveSchicht(v as "TAG" | "NACHT");
-          setSelectedUserId(null);
-        }}
+        onValueChange={(v) => setActiveSchicht(v as "TAG" | "NACHT")}
       >
         <TabsList className="w-full">
           <TabsTrigger value="TAG" className="flex-1">
@@ -368,29 +364,28 @@ export function EinteilenEditor({
               <div className="max-h-[calc(100vh-280px)] overflow-y-auto space-y-1 pr-1">
                 {kollegenSorted.map((user) => {
                   const isAssigned = assignedUserIds.has(user.id);
-                  const isSelected = selectedUserId === user.id;
                   const isBlockedOtherSchicht =
                     (user.beschaeftigung === "ANGESTELLTER" || user.beschaeftigung === "AZUBI") &&
                     otherSchichtUserIds.has(user.id);
                   const qualis =
                     user.qualifikationen?.map((q) => q.qualifikation) || [];
+                  const canDrag = !isAssigned && !isBlockedOtherSchicht;
 
                   return (
-                    <button
+                    <div
                       key={user.id}
-                      onClick={() => {
-                        if (isAssigned || isBlockedOtherSchicht) return;
-                        setSelectedUserId(isSelected ? null : user.id);
+                      draggable={canDrag}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("text/plain", user.id);
+                        e.dataTransfer.effectAllowed = "move";
                       }}
-                      disabled={isAssigned || isBlockedOtherSchicht}
-                      className={`w-full text-left rounded-lg border p-2 transition-all ${
-                        isSelected
-                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
-                          : isAssigned
+                      onDragEnd={() => setDragOverPositionId(null)}
+                      className={`w-full text-left rounded-lg border p-2 transition-all select-none ${
+                        isAssigned
                           ? "border-slate-100 bg-slate-50 opacity-40"
                           : isBlockedOtherSchicht
                           ? "border-red-100 bg-red-50 opacity-40 cursor-not-allowed"
-                          : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer"
+                          : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/50 cursor-grab active:cursor-grabbing"
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -423,7 +418,7 @@ export function EinteilenEditor({
                           ))}
                         </div>
                       )}
-                    </button>
+                    </div>
                   );
                 })}
 
@@ -435,28 +430,27 @@ export function EinteilenEditor({
                     </h3>
                     {azubisSorted.map((user) => {
                       const isAssigned = assignedUserIds.has(user.id);
-                      const isSelected = selectedUserId === user.id;
                       const isBlockedOtherSchicht =
                         otherSchichtUserIds.has(user.id);
                       const qualis =
                         user.qualifikationen?.map((q) => q.qualifikation) || [];
+                      const canDrag = !isAssigned && !isBlockedOtherSchicht;
 
                       return (
-                        <button
+                        <div
                           key={user.id}
-                          onClick={() => {
-                            if (isAssigned || isBlockedOtherSchicht) return;
-                            setSelectedUserId(isSelected ? null : user.id);
+                          draggable={canDrag}
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("text/plain", user.id);
+                            e.dataTransfer.effectAllowed = "move";
                           }}
-                          disabled={isAssigned || isBlockedOtherSchicht}
-                          className={`w-full text-left rounded-lg border p-2 transition-all ${
-                            isSelected
-                              ? "border-amber-500 bg-amber-50 ring-2 ring-amber-200"
-                              : isAssigned
+                          onDragEnd={() => setDragOverPositionId(null)}
+                          className={`w-full text-left rounded-lg border p-2 transition-all select-none ${
+                            isAssigned
                               ? "border-slate-100 bg-slate-50 opacity-40"
                               : isBlockedOtherSchicht
                               ? "border-red-100 bg-red-50 opacity-40 cursor-not-allowed"
-                              : "border-amber-200 bg-amber-50/50 hover:border-amber-400 hover:bg-amber-50 cursor-pointer"
+                              : "border-amber-200 bg-amber-50/50 hover:border-amber-400 hover:bg-amber-50 cursor-grab active:cursor-grabbing"
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -492,17 +486,12 @@ export function EinteilenEditor({
                               ))}
                             </div>
                           )}
-                        </button>
+                        </div>
                       );
                     })}
                   </>
                 )}
               </div>
-              {selectedUserId && (
-                <div className="rounded-lg bg-blue-50 border border-blue-200 p-2 text-sm text-blue-700">
-                  Klicke jetzt auf eine leere Position rechts um zuzuweisen
-                </div>
-              )}
             </div>
           </div>
 
@@ -627,20 +616,32 @@ export function EinteilenEditor({
                                   </Button>
                                 </div>
                               ) : (
-                                /* Leer - klickbar */
-                                <button
-                                  onClick={() => handleAssign(pos.id, pos)}
-                                  disabled={!selectedUserId}
+                                /* Leer - Drop-Zone */
+                                <div
+                                  onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.dataTransfer.dropEffect = "move";
+                                    setDragOverPositionId(pos.id);
+                                  }}
+                                  onDragLeave={() => setDragOverPositionId(null)}
+                                  onDrop={(e) => {
+                                    e.preventDefault();
+                                    const userId = e.dataTransfer.getData("text/plain");
+                                    setDragOverPositionId(null);
+                                    if (userId) {
+                                      handleAssign(userId, pos.id, pos);
+                                    }
+                                  }}
                                   className={`flex-1 rounded border border-dashed px-2 py-1 text-xs transition-colors ${
-                                    selectedUserId
-                                      ? "border-blue-300 bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
+                                    dragOverPositionId === pos.id
+                                      ? "border-emerald-400 bg-emerald-50 text-emerald-700 border-solid ring-2 ring-emerald-200"
                                       : "border-slate-200 text-slate-300"
                                   }`}
                                 >
-                                  {selectedUserId
-                                    ? "Hier zuweisen"
+                                  {dragOverPositionId === pos.id
+                                    ? "Hier ablegen"
                                     : "\u2014 nicht besetzt \u2014"}
-                                </button>
+                                </div>
                               )}
                             </div>
                           );

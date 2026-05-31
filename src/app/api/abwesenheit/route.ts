@@ -28,7 +28,10 @@ export async function GET(request: NextRequest) {
       where: {
         datum: datumDate,
         user: {
-          abteilungId,
+          OR: [
+            { abteilungId },
+            { beschaeftigung: "AZUBI" },
+          ],
         },
       },
       include: {

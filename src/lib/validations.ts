@@ -8,7 +8,7 @@ export const createUserSchema = z.object({
   vorname: z.string().min(1, "Vorname ist erforderlich"),
   nachname: z.string().min(1, "Nachname ist erforderlich"),
   rolle: z.enum(["SYSOP", "ADMIN", "KOLLEGE"]).default("KOLLEGE"),
-  beschaeftigung: z.enum(["BEAMTER", "ANGESTELLTER"]),
+  beschaeftigung: z.enum(["BEAMTER", "ANGESTELLTER", "AZUBI"]),
   abteilungId: z.string().min(1, "Wachabteilung ist erforderlich"),
 });
 
@@ -18,7 +18,7 @@ export const updateUserSchema = z.object({
   vorname: z.string().min(1).optional(),
   nachname: z.string().min(1).optional(),
   rolle: z.enum(["SYSOP", "ADMIN", "KOLLEGE"]).optional(),
-  beschaeftigung: z.enum(["BEAMTER", "ANGESTELLTER"]).optional(),
+  beschaeftigung: z.enum(["BEAMTER", "ANGESTELLTER", "AZUBI"]).optional(),
   abteilungId: z.string().min(1).optional(),
   aktiv: z.boolean().optional(),
 });
@@ -108,6 +108,30 @@ export const deleteAbwesenheitSchema = z.object({
   userId: z.string().min(1, "User-ID ist erforderlich"),
   datum: z.string().min(1, "Datum ist erforderlich"),
   schicht: z.enum(["TAG", "NACHT"]).optional().nullable(),
+});
+
+// --- Abteilung ---
+
+export const createAbteilungSchema = z.object({
+  name: z.string().min(1, "Name ist erforderlich").max(50),
+});
+
+export const updateAbteilungSchema = z.object({
+  name: z.string().min(1).max(50).optional(),
+});
+
+// --- Qualifikation ---
+
+export const createQualifikationSchema = z.object({
+  kuerzel: z.string().min(1, "Kuerzel ist erforderlich").max(20),
+  name: z.string().min(1, "Name ist erforderlich").max(100),
+  farbe: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Ungueltige Farbe").default("#6b7280"),
+});
+
+export const updateQualifikationSchema = z.object({
+  kuerzel: z.string().min(1).max(20).optional(),
+  name: z.string().min(1).max(100).optional(),
+  farbe: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
 });
 
 // --- Einstellungen ---

@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { exportDienstplanPdf } from "@/lib/pdf-export";
+import { MonatsKalender } from "@/components/dienstplan/monats-kalender";
 import type {
   Abteilung,
   FahrzeugData,
@@ -227,6 +228,8 @@ export default function DienstplanPage() {
   );
   const [loading, setLoading] = useState(true);
   const [loadingDienstplan, setLoadingDienstplan] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(true);
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
 
   // ----------------------------------------------------------
   // Initial data load
@@ -436,12 +439,15 @@ export default function DienstplanPage() {
             <ChevronLeft className="size-4" />
           </Button>
 
-          <div className="flex items-center gap-2 rounded-lg border bg-white px-3 py-1.5">
+          <button
+            onClick={() => setShowCalendar((v) => !v)}
+            className="flex items-center gap-2 rounded-lg border bg-white px-3 py-1.5 hover:bg-slate-50 transition-colors cursor-pointer"
+          >
             <Calendar className="size-4 text-slate-400" />
             <span className="text-sm font-medium text-slate-900">
               {formatDateDisplay(currentDate)}
             </span>
-          </div>
+          </button>
 
           <Button variant="outline" size="icon" onClick={goToNextDay}>
             <ChevronRight className="size-4" />
@@ -453,9 +459,28 @@ export default function DienstplanPage() {
             </Button>
           )}
         </div>
-
-        {/* Nur eigene Abteilung - kein Wechsel */}
       </div>
+
+      {/* Monatskalender */}
+      {showCalendar && (
+        <MonatsKalender
+          currentDate={currentDate}
+          abteilungName={abteilungName}
+          abteilungId={selectedAbteilung}
+          calendarMonth={calendarMonth}
+          onDateSelect={(date) => {
+            setCurrentDate(date);
+            setShowCalendar(false);
+          }}
+          onMonthChange={(offset) => {
+            setCalendarMonth((prev) => {
+              const next = new Date(prev);
+              next.setMonth(next.getMonth() + offset);
+              return next;
+            });
+          }}
+        />
+      )}
 
       {/* Content */}
       {loadingDienstplan ? (

@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { VerfuegbarkeitEditor } from "@/components/dienstplan/verfuegbarkeit-editor";
 import { EinteilenEditor } from "@/components/dienstplan/einteilen-editor";
+import { MonatsKalender } from "@/components/dienstplan/monats-kalender";
 import type {
   UserData,
   FahrzeugData,
@@ -88,6 +89,8 @@ function DienstplanBearbeitenInner() {
   const [loading, setLoading] = useState(true);
   const [loadingDienstplan, setLoadingDienstplan] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(true);
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1));
 
   const abteilungId = session?.user?.abteilungId;
 
@@ -271,7 +274,7 @@ function DienstplanBearbeitenInner() {
     );
   }
 
-  if (session?.user?.rolle !== "ADMIN") return null;
+  if (session?.user?.rolle !== "ADMIN" && session?.user?.rolle !== "SYSOP") return null;
 
   return (
     <div className="space-y-4">
@@ -299,12 +302,15 @@ function DienstplanBearbeitenInner() {
         <Button variant="outline" size="icon" onClick={goToPreviousDay}>
           <ChevronLeft className="size-4" />
         </Button>
-        <div className="flex items-center gap-2 rounded-lg border bg-white px-3 py-1.5">
+        <button
+          onClick={() => setShowCalendar((v) => !v)}
+          className="flex items-center gap-2 rounded-lg border bg-white px-3 py-1.5 hover:bg-slate-50 transition-colors cursor-pointer"
+        >
           <Calendar className="size-4 text-slate-400" />
           <span className="text-sm font-medium text-slate-900">
             {formatDateDisplay(currentDate)}
           </span>
-        </div>
+        </button>
         <Button variant="outline" size="icon" onClick={goToNextDay}>
           <ChevronRight className="size-4" />
         </Button>
@@ -337,6 +343,28 @@ function DienstplanBearbeitenInner() {
           </div>
         </div>
       </div>
+
+      {/* Monatskalender */}
+      {showCalendar && (
+        <MonatsKalender
+          currentDate={currentDate}
+          abteilungName={abteilungName}
+          abteilungId={abteilungId}
+          calendarMonth={calendarMonth}
+          onDateSelect={(date) => {
+            setCurrentDate(date);
+            setStep(1);
+            setShowCalendar(false);
+          }}
+          onMonthChange={(offset) => {
+            setCalendarMonth((prev) => {
+              const next = new Date(prev);
+              next.setMonth(next.getMonth() + offset);
+              return next;
+            });
+          }}
+        />
+      )}
 
       {/* Content */}
       {loadingDienstplan ? (

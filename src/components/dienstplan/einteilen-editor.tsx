@@ -115,8 +115,8 @@ export function EinteilenEditor({
     }
   }
 
-  // Zuweisungen der anderen Schicht (fuer Angestellter-Check)
-  const otherSchichtUserIds = new Map<string, "BEAMTER" | "ANGESTELLTER">();
+  // Zuweisungen der anderen Schicht (fuer Angestellter/Azubi-Check)
+  const otherSchichtUserIds = new Map<string, "BEAMTER" | "ANGESTELLTER" | "AZUBI">();
   if (otherDienstplan) {
     for (const z of otherDienstplan.zuweisungen) {
       otherSchichtUserIds.set(z.userId, z.user.beschaeftigung);
@@ -133,13 +133,23 @@ export function EinteilenEditor({
 
   const activeFahrzeuge = fahrzeuge.filter((f) => f.aktiv);
 
-  // Kollegen filtern: verfuegbar + nicht Angestellter in anderer Schicht
-  const kollegenSorted = [...verfuegbareKollegen].sort((a, b) => {
+  // Kollegen aufteilen: regulaere vs. Azubis
+  const regulaereKollegen = verfuegbareKollegen.filter(
+    (u) => u.beschaeftigung !== "AZUBI"
+  );
+  const azubis = verfuegbareKollegen.filter(
+    (u) => u.beschaeftigung === "AZUBI"
+  );
+
+  const sortByAssignment = (a: UserData, b: UserData) => {
     const aAssigned = assignedUserIds.has(a.id);
     const bAssigned = assignedUserIds.has(b.id);
     if (aAssigned !== bAssigned) return aAssigned ? 1 : -1;
     return a.nachname.localeCompare(b.nachname);
-  });
+  };
+
+  const kollegenSorted = [...regulaereKollegen].sort(sortByAssignment);
+  const azubisSorted = [...azubis].sort(sortByAssignment);
 
   // ----------------------------------------------------------------
   // Actions
@@ -148,13 +158,17 @@ export function EinteilenEditor({
   async function handleAssign(fahrzeugPositionId: string, pos?: FahrzeugPositionData) {
     if (!selectedUserId || !dienstplan) return;
 
-    // Angestellter-Check
+    // Angestellter/Azubi-Check
     const user = verfuegbareKollegen.find((u) => u.id === selectedUserId);
     if (
-      user?.beschaeftigung === "ANGESTELLTER" &&
+      (user?.beschaeftigung === "ANGESTELLTER" || user?.beschaeftigung === "AZUBI") &&
       otherSchichtUserIds.has(selectedUserId)
     ) {
-      toast.error("Angestellte koennen nur in einer Schicht eingeteilt werden.");
+      toast.error(
+        user.beschaeftigung === "AZUBI"
+          ? "Azubis koennen nur in einer Schicht eingeteilt werden."
+          : "Angestellte koennen nur in einer Schicht eingeteilt werden."
+      );
       return;
     }
 
@@ -355,8 +369,8 @@ export function EinteilenEditor({
                 {kollegenSorted.map((user) => {
                   const isAssigned = assignedUserIds.has(user.id);
                   const isSelected = selectedUserId === user.id;
-                  const isBlockedAngestellter =
-                    user.beschaeftigung === "ANGESTELLTER" &&
+                  const isBlockedOtherSchicht =
+                    (user.beschaeftigung === "ANGESTELLTER" || user.beschaeftigung === "AZUBI") &&
                     otherSchichtUserIds.has(user.id);
                   const qualis =
                     user.qualifikationen?.map((q) => q.qualifikation) || [];
@@ -365,16 +379,16 @@ export function EinteilenEditor({
                     <button
                       key={user.id}
                       onClick={() => {
-                        if (isAssigned || isBlockedAngestellter) return;
+                        if (isAssigned || isBlockedOtherSchicht) return;
                         setSelectedUserId(isSelected ? null : user.id);
                       }}
-                      disabled={isAssigned || isBlockedAngestellter}
+                      disabled={isAssigned || isBlockedOtherSchicht}
                       className={`w-full text-left rounded-lg border p-2 transition-all ${
                         isSelected
                           ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
                           : isAssigned
                           ? "border-slate-100 bg-slate-50 opacity-40"
-                          : isBlockedAngestellter
+                          : isBlockedOtherSchicht
                           ? "border-red-100 bg-red-50 opacity-40 cursor-not-allowed"
                           : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer"
                       }`}
@@ -390,7 +404,7 @@ export function EinteilenEditor({
                         >
                           {user.nachname}, {user.vorname}
                         </span>
-                        {isBlockedAngestellter && (
+                        {isBlockedOtherSchicht && (
                           <span className="text-[10px] text-red-500">
                             (andere Schicht)
                           </span>
@@ -412,6 +426,77 @@ export function EinteilenEditor({
                     </button>
                   );
                 })}
+
+                {/* Azubis - separate Gruppe */}
+                {azubisSorted.length > 0 && (
+                  <>
+                    <h3 className="text-sm font-semibold text-amber-700 mt-3 pt-3 border-t border-amber-200">
+                      Azubis ({azubisSorted.filter((u) => !assignedUserIds.has(u.id)).length})
+                    </h3>
+                    {azubisSorted.map((user) => {
+                      const isAssigned = assignedUserIds.has(user.id);
+                      const isSelected = selectedUserId === user.id;
+                      const isBlockedOtherSchicht =
+                        otherSchichtUserIds.has(user.id);
+                      const qualis =
+                        user.qualifikationen?.map((q) => q.qualifikation) || [];
+
+                      return (
+                        <button
+                          key={user.id}
+                          onClick={() => {
+                            if (isAssigned || isBlockedOtherSchicht) return;
+                            setSelectedUserId(isSelected ? null : user.id);
+                          }}
+                          disabled={isAssigned || isBlockedOtherSchicht}
+                          className={`w-full text-left rounded-lg border p-2 transition-all ${
+                            isSelected
+                              ? "border-amber-500 bg-amber-50 ring-2 ring-amber-200"
+                              : isAssigned
+                              ? "border-slate-100 bg-slate-50 opacity-40"
+                              : isBlockedOtherSchicht
+                              ? "border-red-100 bg-red-50 opacity-40 cursor-not-allowed"
+                              : "border-amber-200 bg-amber-50/50 hover:border-amber-400 hover:bg-amber-50 cursor-pointer"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <User className="size-3.5 shrink-0 text-amber-500" />
+                            <span
+                              className={`text-sm font-medium ${
+                                isAssigned
+                                  ? "line-through text-slate-400"
+                                  : "text-slate-900"
+                              }`}
+                            >
+                              {user.nachname}, {user.vorname}
+                            </span>
+                            <span className="text-[9px] font-medium bg-amber-100 text-amber-700 rounded px-1 py-0">
+                              Azubi
+                            </span>
+                            {isBlockedOtherSchicht && (
+                              <span className="text-[10px] text-red-500">
+                                (andere Schicht)
+                              </span>
+                            )}
+                          </div>
+                          {qualis.length > 0 && (
+                            <div className="flex flex-wrap gap-0.5 mt-1 ml-5">
+                              {qualis.map((q) => (
+                                <span
+                                  key={q.id}
+                                  className="inline-block rounded px-1 py-0 text-[9px] font-medium text-white"
+                                  style={{ backgroundColor: q.farbe }}
+                                >
+                                  {q.kuerzel}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </>
+                )}
               </div>
               {selectedUserId && (
                 <div className="rounded-lg bg-blue-50 border border-blue-200 p-2 text-sm text-blue-700">

@@ -18,7 +18,7 @@ export interface UserData {
   nachname: string;
   email: string;
   rolle: "SYSOP" | "ADMIN" | "KOLLEGE";
-  beschaeftigung: "BEAMTER" | "ANGESTELLTER";
+  beschaeftigung: "BEAMTER" | "ANGESTELLTER" | "AZUBI";
   aktiv: boolean;
   abteilungId: string;
   qualifikationen?: { qualifikation: QualifikationData }[];

@@ -199,6 +199,9 @@ async function main() {
     { email: "b.schroeder@feuerwehr.de", vorname: "Benjamin", nachname: "Schröder", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.ANGESTELLTER, abteilungId: abt1.id, qualifikationen: ["NotSan"] },
     { email: "m.neumann@feuerwehr.de", vorname: "Markus", nachname: "Neumann", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.ANGESTELLTER, abteilungId: abt1.id, qualifikationen: ["RS", "AGT"] },
     { email: "d.schwarz@feuerwehr.de", vorname: "Dennis", nachname: "Schwarz", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.ANGESTELLTER, abteilungId: abt1.id, qualifikationen: ["RS"] },
+    // Azubis
+    { email: "l.meyer@feuerwehr.de", vorname: "Leon", nachname: "Meyer", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.AZUBI, abteilungId: abt1.id, qualifikationen: ["TM"] },
+    { email: "j.walter@feuerwehr.de", vorname: "Jonas", nachname: "Walter", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.AZUBI, abteilungId: abt1.id, qualifikationen: ["TM"] },
   ];
 
   // =============================================
@@ -228,6 +231,8 @@ async function main() {
     { email: "m.lorenz@feuerwehr.de", vorname: "Marc", nachname: "Lorenz", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.ANGESTELLTER, abteilungId: abt2.id, qualifikationen: ["NotSan"] },
     { email: "s.simon@feuerwehr.de", vorname: "Sebastian", nachname: "Simon", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.ANGESTELLTER, abteilungId: abt2.id, qualifikationen: ["RS", "AGT"] },
     { email: "b.ludwig@feuerwehr.de", vorname: "Bastian", nachname: "Ludwig", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.ANGESTELLTER, abteilungId: abt2.id, qualifikationen: ["RS"] },
+    // Azubis
+    { email: "n.huber@feuerwehr.de", vorname: "Noah", nachname: "Huber", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.AZUBI, abteilungId: abt2.id, qualifikationen: ["TM"] },
   ];
 
   // =============================================
@@ -257,6 +262,8 @@ async function main() {
     { email: "p.hermann@feuerwehr.de", vorname: "Paul", nachname: "Hermann", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.ANGESTELLTER, abteilungId: abt3.id, qualifikationen: ["NotSan"] },
     { email: "s.busch@feuerwehr.de", vorname: "Simon", nachname: "Busch", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.ANGESTELLTER, abteilungId: abt3.id, qualifikationen: ["RS", "AGT"] },
     { email: "j.jansen@feuerwehr.de", vorname: "Jörg", nachname: "Jansen", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.ANGESTELLTER, abteilungId: abt3.id, qualifikationen: ["RS"] },
+    // Azubis
+    { email: "f.kramer@feuerwehr.de", vorname: "Finn", nachname: "Krämer", rolle: Rolle.KOLLEGE, beschaeftigung: Beschaeftigung.AZUBI, abteilungId: abt3.id, qualifikationen: ["TM"] },
   ];
 
   // Alle User anlegen
@@ -268,9 +275,9 @@ async function main() {
   }
 
   console.log(`\n${allUserDefs.length} Kollegen erstellt:`);
-  console.log(`  Abt 1: ${abt1Users.length} (${abt1Users.filter(u => u.beschaeftigung === "BEAMTER").length} Beamte, ${abt1Users.filter(u => u.beschaeftigung === "ANGESTELLTER").length} Angestellte)`);
-  console.log(`  Abt 2: ${abt2Users.length} (${abt2Users.filter(u => u.beschaeftigung === "BEAMTER").length} Beamte, ${abt2Users.filter(u => u.beschaeftigung === "ANGESTELLTER").length} Angestellte)`);
-  console.log(`  Abt 3: ${abt3Users.length} (${abt3Users.filter(u => u.beschaeftigung === "BEAMTER").length} Beamte, ${abt3Users.filter(u => u.beschaeftigung === "ANGESTELLTER").length} Angestellte)`);
+  console.log(`  Abt 1: ${abt1Users.length} (${abt1Users.filter(u => u.beschaeftigung === "BEAMTER").length} Beamte, ${abt1Users.filter(u => u.beschaeftigung === "ANGESTELLTER").length} Angestellte, ${abt1Users.filter(u => u.beschaeftigung === "AZUBI").length} Azubis)`);
+  console.log(`  Abt 2: ${abt2Users.length} (${abt2Users.filter(u => u.beschaeftigung === "BEAMTER").length} Beamte, ${abt2Users.filter(u => u.beschaeftigung === "ANGESTELLTER").length} Angestellte, ${abt2Users.filter(u => u.beschaeftigung === "AZUBI").length} Azubis)`);
+  console.log(`  Abt 3: ${abt3Users.length} (${abt3Users.filter(u => u.beschaeftigung === "BEAMTER").length} Beamte, ${abt3Users.filter(u => u.beschaeftigung === "ANGESTELLTER").length} Angestellte, ${abt3Users.filter(u => u.beschaeftigung === "AZUBI").length} Azubis)`);
 
   // =============================================
   // Dienstpläne für HEUTE – alle 3 Abteilungen

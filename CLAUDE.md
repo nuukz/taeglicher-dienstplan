@@ -23,7 +23,7 @@ Tagesdienstplan-System fuer die Feuerwehr. Admins (Wachhabende) teilen Kollegen 
 - **Env-Vars:** `.env` (nicht im Git!) - DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, VAPID-Keys
 
 ## Datenmodell (Prisma)
-- **User** - Kollegen mit Rolle (ADMIN/KOLLEGE), Beschaeftigung (BEAMTER/ANGESTELLTER), abteilungId
+- **User** - Kollegen mit Rolle (ADMIN/KOLLEGE), Beschaeftigung (BEAMTER/ANGESTELLTER/AZUBI), abteilungId. Azubis sind wachabteilungsuebergreifend und erscheinen in allen WA-Einteilungen.
 - **Abteilung** - Wachabteilungen (WA1, WA2, WA3), jeweils mit eigenen Fahrzeugen
 - **Fahrzeug** - Einsatzfahrzeuge pro Abteilung, mit Positionen (FahrzeugPosition)
 - **Sonderfunktion** - Zusaetzliche Funktionen (Wachhabender, Atemschutz, etc.)

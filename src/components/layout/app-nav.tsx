@@ -9,6 +9,8 @@ import {
   Star,
   Settings,
   Menu,
+  Building2,
+  Award,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,6 +37,8 @@ const allNavItems: NavItem[] = [
   { href: "/fahrzeuge", label: "Fahrzeuge", icon: Truck, minRole: "ADMIN" },
   { href: "/sonderfunktionen", label: "Sonderfunktionen", icon: Star, minRole: "ADMIN" },
   { href: "/einstellungen", label: "Einstellungen", icon: Settings, minRole: "ADMIN" },
+  { href: "/wachen", label: "Wachen", icon: Building2, minRole: "SYSOP" as Rolle },
+  { href: "/qualifikationen", label: "Qualifikationen", icon: Award, minRole: "SYSOP" as Rolle },
 ];
 
 const ROLE_LABELS: Record<Rolle, string> = {

@@ -17,7 +17,14 @@ export async function GET(request: NextRequest) {
 
     const users = await prisma.user.findMany({
       where: {
-        ...(abteilungId ? { abteilungId } : {}),
+        ...(abteilungId
+          ? {
+              OR: [
+                { abteilungId },
+                { beschaeftigung: "AZUBI" },
+              ],
+            }
+          : {}),
         rolle: { not: "SYSOP" },
       },
       include: {

@@ -20,6 +20,7 @@ enum Rolle {
 enum Beschaeftigung {
   BEAMTER
   ANGESTELLTER
+  AZUBI
 }
 
 enum SchichtTyp {

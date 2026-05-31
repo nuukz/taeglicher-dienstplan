@@ -55,7 +55,7 @@ interface PersonalUser {
   vorname: string;
   nachname: string;
   rolle: "SYSOP" | "ADMIN" | "KOLLEGE";
-  beschaeftigung: "BEAMTER" | "ANGESTELLTER";
+  beschaeftigung: "BEAMTER" | "ANGESTELLTER" | "AZUBI";
   aktiv: boolean;
   abteilungId: string;
   abteilung: Abteilung;
@@ -68,7 +68,7 @@ interface FormData {
   email: string;
   passwort: string;
   rolle: "SYSOP" | "ADMIN" | "KOLLEGE";
-  beschaeftigung: "BEAMTER" | "ANGESTELLTER";
+  beschaeftigung: "BEAMTER" | "ANGESTELLTER" | "AZUBI";
   abteilungId: string;
   qualifikationIds: string[];
 }
@@ -432,7 +432,7 @@ export default function PersonalPage() {
                     onValueChange={(val) =>
                       setForm((f) => ({
                         ...f,
-                        beschaeftigung: String(val) as "BEAMTER" | "ANGESTELLTER",
+                        beschaeftigung: String(val) as "BEAMTER" | "ANGESTELLTER" | "AZUBI",
                       }))
                     }
                   >
@@ -442,6 +442,7 @@ export default function PersonalPage() {
                     <SelectContent>
                       <SelectItem value="BEAMTER">Beamter</SelectItem>
                       <SelectItem value="ANGESTELLTER">Angestellter</SelectItem>
+                      <SelectItem value="AZUBI">Azubi</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -594,7 +595,7 @@ export default function PersonalPage() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       <Badge variant="outline">
-                        {user.beschaeftigung === "BEAMTER" ? "Bmt." : "Ang."}
+                        {user.beschaeftigung === "BEAMTER" ? "Bmt." : user.beschaeftigung === "AZUBI" ? "Azubi" : "Ang."}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -695,7 +696,7 @@ export default function PersonalPage() {
                   {ROLE_LABELS[user.rolle] || user.rolle}
                 </Badge>
                 <Badge variant="outline">
-                  {user.beschaeftigung === "BEAMTER" ? "Beamter" : "Angestellter"}
+                  {user.beschaeftigung === "BEAMTER" ? "Beamter" : user.beschaeftigung === "AZUBI" ? "Azubi" : "Angestellter"}
                 </Badge>
               </div>
             </div>

@@ -187,10 +187,10 @@ export default function QualifikationenPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Loeschen");
+        throw new Error(data.error || "Fehler beim Löschen");
       }
 
-      toast.success(`"${deletingQuali.kuerzel}" geloescht`);
+      toast.success(`"${deletingQuali.kuerzel}" gelöscht`);
       setDeleteDialogOpen(false);
       setDeletingQuali(null);
       fetchData();
@@ -253,7 +253,7 @@ export default function QualifikationenPage() {
 
               <div className="mt-4 grid gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="q-kuerzel">Kuerzel</Label>
+                  <Label htmlFor="q-kuerzel">Kürzel</Label>
                   <Input
                     id="q-kuerzel"
                     required
@@ -274,7 +274,7 @@ export default function QualifikationenPage() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, name: e.target.value }))
                     }
-                    placeholder="z.B. Truppfuehrer"
+                    placeholder="z.B. Truppführer"
                   />
                 </div>
 
@@ -314,9 +314,9 @@ export default function QualifikationenPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Qualifikation loeschen?</DialogTitle>
+            <DialogTitle>Qualifikation löschen?</DialogTitle>
             <DialogDescription>
-              &quot;{deletingQuali?.kuerzel}&quot; ({deletingQuali?.name}) wirklich loeschen?
+              &quot;{deletingQuali?.kuerzel}&quot; ({deletingQuali?.name}) wirklich löschen?
               Alle User-Zuordnungen werden ebenfalls entfernt.
             </DialogDescription>
           </DialogHeader>
@@ -333,7 +333,7 @@ export default function QualifikationenPage() {
               disabled={saving}
             >
               {saving && <Loader2 className="size-4 animate-spin" />}
-              Loeschen
+              Löschen
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -350,7 +350,7 @@ export default function QualifikationenPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Kuerzel</TableHead>
+                <TableHead>Kürzel</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Farbe</TableHead>
                 <TableHead className="text-center">User</TableHead>
@@ -394,7 +394,7 @@ export default function QualifikationenPage() {
                         variant="ghost"
                         size="icon-sm"
                         onClick={() => openDeleteDialog(quali)}
-                        title="Loeschen"
+                        title="Löschen"
                       >
                         <Trash2 className="size-3.5 text-red-500" />
                       </Button>

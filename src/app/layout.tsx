@@ -12,7 +12,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "ShiftHero - WachPlan",
-  description: "Tagesdienstplan fuer die Feuerwehr",
+  description: "Tagesdienstplan für die Feuerwehr",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

@@ -168,8 +168,8 @@ export function EinteilenEditor({
     ) {
       toast.error(
         user.beschaeftigung === "AZUBI"
-          ? "Azubis koennen nur in einer Schicht eingeteilt werden."
-          : "Angestellte koennen nur in einer Schicht eingeteilt werden."
+          ? "Azubis können nur in einer Schicht eingeteilt werden."
+          : "Angestellte können nur in einer Schicht eingeteilt werden."
       );
       return;
     }
@@ -308,7 +308,7 @@ export function EinteilenEditor({
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={onZurueck}>
             <ChevronLeft className="size-4" />
-            Verfuegbarkeit
+            Verfügbarkeit
           </Button>
           <div>
             <h2 className="text-lg font-semibold text-slate-900">
@@ -369,7 +369,7 @@ export function EinteilenEditor({
           <div className="lg:w-72 xl:w-80 shrink-0">
             <div className="sticky top-4 space-y-2">
               <h3 className="text-sm font-semibold text-slate-700">
-                Verfuegbar ({kollegenSorted.filter((u) => !assignedUserIds.has(u.id)).length})
+                Verfügbar ({kollegenSorted.filter((u) => !assignedUserIds.has(u.id)).length})
               </h3>
               <div className="max-h-[calc(100vh-280px)] overflow-y-auto space-y-1 pr-1">
                 {kollegenSorted.map((user) => {

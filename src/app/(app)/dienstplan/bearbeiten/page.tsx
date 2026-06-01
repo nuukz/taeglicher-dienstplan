@@ -258,19 +258,19 @@ function DienstplanBearbeitenInner() {
         );
       }
       if (promises.length === 0) {
-        toast.info("Kein Dienstplan zum Veroeffentlichen vorhanden.");
+        toast.info("Kein Dienstplan zum Veröffentlichen vorhanden.");
         return;
       }
       const results = await Promise.all(promises);
       for (const res of results) {
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.error || "Fehler beim Veroeffentlichen");
+          throw new Error(data.error || "Fehler beim Veröffentlichen");
         }
       }
 
       const isUpdate = dienstplanData?.tag?.veroeffentlicht || dienstplanData?.nacht?.veroeffentlicht;
-      toast.success(isUpdate ? "Dienstplan aktualisiert & gesendet!" : "Dienstplan veroeffentlicht!");
+      toast.success(isUpdate ? "Dienstplan aktualisiert & gesendet!" : "Dienstplan veröffentlicht!");
       fetchDienstplan();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Fehler");

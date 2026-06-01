@@ -102,7 +102,7 @@ export async function PUT(
       error.message.includes("Foreign key constraint")
     ) {
       return NextResponse.json(
-        { error: "Ungueltige Qualifikation oder Benutzer" },
+        { error: "Ungültige Qualifikation oder Benutzer" },
         { status: 400 }
       );
     }

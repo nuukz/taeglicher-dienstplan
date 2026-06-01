@@ -238,7 +238,7 @@ export default function FahrzeugePage() {
         throw new Error(data.error || "Fehler beim Erstellen der Position");
       }
 
-      toast.success(`Position "${posName.trim()}" hinzugefuegt`);
+      toast.success(`Position "${posName.trim()}" hinzugefügt`);
       setPosDialogOpen(false);
       fetchData();
     } catch (err) {
@@ -258,7 +258,7 @@ export default function FahrzeugePage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Loeschen der Position");
+        throw new Error(data.error || "Fehler beim Löschen der Position");
       }
 
       toast.success("Position entfernt");
@@ -339,7 +339,7 @@ export default function FahrzeugePage() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, typ: e.target.value }))
                     }
-                    placeholder="z.B. Loeschfahrzeug, Drehleiter"
+                    placeholder="z.B. Löschfahrzeug, Drehleiter"
                   />
                 </div>
 
@@ -399,9 +399,9 @@ export default function FahrzeugePage() {
         <DialogContent className="sm:max-w-sm">
           <form onSubmit={handleAddPosition}>
             <DialogHeader>
-              <DialogTitle>Position hinzufuegen</DialogTitle>
+              <DialogTitle>Position hinzufügen</DialogTitle>
               <DialogDescription>
-                Neue Besatzungsposition fuer dieses Fahrzeug anlegen.
+                Neue Besatzungsposition für dieses Fahrzeug anlegen.
               </DialogDescription>
             </DialogHeader>
 
@@ -419,7 +419,7 @@ export default function FahrzeugePage() {
             <DialogFooter className="mt-6">
               <Button type="submit" disabled={saving || !posName.trim()}>
                 {saving && <Loader2 className="size-4 animate-spin" />}
-                Hinzufuegen
+                Hinzufügen
               </Button>
             </DialogFooter>
           </form>
@@ -495,7 +495,7 @@ export default function FahrzeugePage() {
                       onClick={() => openAddPositionDialog(fahrzeug.id)}
                     >
                       <Plus className="size-3" />
-                      Hinzufuegen
+                      Hinzufügen
                     </Button>
                   </div>
 

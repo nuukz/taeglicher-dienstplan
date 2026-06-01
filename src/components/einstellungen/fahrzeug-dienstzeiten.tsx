@@ -197,7 +197,7 @@ export function FahrzeugDienstzeiten() {
                           <button
                             type="button"
                             onClick={() => toggleTag24h(f.id, i)}
-                            title="24h fuer diesen Tag umschalten"
+                            title="24h für diesen Tag umschalten"
                             className="w-full rounded px-1 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
                           >
                             {wt}

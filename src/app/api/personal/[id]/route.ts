@@ -84,7 +84,7 @@ export async function PATCH(
     if (!isSysop(session.user.rolle)) {
       if (data.rolle === "SYSOP") {
         return NextResponse.json(
-          { error: "Keine Berechtigung fuer diese Rolle" },
+          { error: "Keine Berechtigung für diese Rolle" },
           { status: 403 }
         );
       }

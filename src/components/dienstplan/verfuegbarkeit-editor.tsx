@@ -192,7 +192,7 @@ export function VerfuegbarkeitEditor({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">
-            Schritt 1: Verfuegbarkeit
+            Schritt 1: Verfügbarkeit
           </h2>
           <p className="text-sm text-slate-500">
             Markiere wer heute nicht da ist
@@ -201,7 +201,7 @@ export function VerfuegbarkeitEditor({
         <div className="flex items-center gap-3">
           <div className="text-sm text-slate-600">
             <span className="font-semibold text-emerald-600">{verfuegbar.length}</span>
-            {" "}von {activePersonal.length} verfuegbar
+            {" "}von {activePersonal.length} verfügbar
           </div>
           <Button variant="outline" onClick={() => setVertretungOpen(true)}>
             <UserPlus className="mr-1 size-4" />
@@ -306,7 +306,7 @@ export function VerfuegbarkeitEditor({
                     onValueChange={(v) => { if (v) handleSetAbwesend(user.id, String(v)); }}
                   >
                     <SelectTrigger className="w-36 h-8 text-xs border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100">
-                      <SelectValue placeholder="Verfuegbar ✓" />
+                      <SelectValue placeholder="Verfügbar ✓" />
                     </SelectTrigger>
                     <SelectContent>
                       {ABWESENHEITS_GRUENDE.map((g) => (

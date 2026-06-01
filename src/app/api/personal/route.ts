@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     // Rollen-Eskalation: nur SYSOP darf SYSOP-Rollen vergeben
     if (data.rolle === "SYSOP" && !isSysop(session.user.rolle)) {
       return NextResponse.json(
-        { error: "Keine Berechtigung fuer diese Rolle" },
+        { error: "Keine Berechtigung für diese Rolle" },
         { status: 403 }
       );
     }

@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       error.message.includes("Unique constraint")
     ) {
       return NextResponse.json(
-        { error: "Kuerzel existiert bereits" },
+        { error: "Kürzel existiert bereits" },
         { status: 409 }
       );
     }

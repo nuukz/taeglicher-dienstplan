@@ -169,10 +169,10 @@ export default function WachenPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Loeschen");
+        throw new Error(data.error || "Fehler beim Löschen");
       }
 
-      toast.success(`Wache "${deletingAbteilung.name}" geloescht`);
+      toast.success(`Wache "${deletingAbteilung.name}" gelöscht`);
       setDeleteDialogOpen(false);
       setDeletingAbteilung(null);
       fetchData();
@@ -228,7 +228,7 @@ export default function WachenPage() {
                 </DialogTitle>
                 <DialogDescription>
                   {editingAbteilung
-                    ? "Name der Wachabteilung aendern."
+                    ? "Name der Wachabteilung ändern."
                     : "Neue Wachabteilung im System anlegen."}
                 </DialogDescription>
               </DialogHeader>
@@ -259,10 +259,10 @@ export default function WachenPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Wache loeschen?</DialogTitle>
+            <DialogTitle>Wache löschen?</DialogTitle>
             <DialogDescription>
-              Wache &quot;{deletingAbteilung?.name}&quot; wirklich loeschen?
-              Diese Aktion kann nicht rueckgaengig gemacht werden.
+              Wache &quot;{deletingAbteilung?.name}&quot; wirklich löschen?
+              Diese Aktion kann nicht rückgängig gemacht werden.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
@@ -278,7 +278,7 @@ export default function WachenPage() {
               disabled={saving}
             >
               {saving && <Loader2 className="size-4 animate-spin" />}
-              Loeschen
+              Löschen
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -297,7 +297,7 @@ export default function WachenPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead className="text-center">User</TableHead>
-                <TableHead className="text-center">Dienstplaene</TableHead>
+                <TableHead className="text-center">Dienstpläne</TableHead>
                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
@@ -325,7 +325,7 @@ export default function WachenPage() {
                         variant="ghost"
                         size="icon-sm"
                         onClick={() => openDeleteDialog(abt)}
-                        title="Loeschen"
+                        title="Löschen"
                       >
                         <Trash2 className="size-3.5 text-red-500" />
                       </Button>

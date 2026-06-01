@@ -88,7 +88,7 @@ export const updateFahrzeugDienstzeitSchema = z.object({
         imDienst: z.boolean(),
       })
     )
-    .max(14, "Maximal 14 Eintraege (7 Tage x 2 Schichten)"),
+    .max(14, "Maximal 14 Einträge (7 Tage x 2 Schichten)"),
 });
 
 // --- Sonderfunktionen ---
@@ -166,9 +166,9 @@ export const updateAbteilungSchema = z.object({
 // --- Qualifikation ---
 
 export const createQualifikationSchema = z.object({
-  kuerzel: z.string().min(1, "Kuerzel ist erforderlich").max(20),
+  kuerzel: z.string().min(1, "Kürzel ist erforderlich").max(20),
   name: z.string().min(1, "Name ist erforderlich").max(100),
-  farbe: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Ungueltige Farbe").default("#6b7280"),
+  farbe: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Ungültige Farbe").default("#6b7280"),
 });
 
 export const updateQualifikationSchema = z.object({

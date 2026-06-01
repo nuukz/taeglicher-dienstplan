@@ -53,7 +53,7 @@ export default function LoginPage() {
   const quickLogins = [
     { label: "Admin WA1", sublabel: "M. Weber", email: "admin@feuerwehr.de", password: "admin123" },
     { label: "Admin WA2", sublabel: "O. Richter", email: "o.richter@feuerwehr.de", password: "admin123" },
-    { label: "Admin WA3", sublabel: "J. Schaefer", email: "j.schaefer@feuerwehr.de", password: "admin123" },
+    { label: "Admin WA3", sublabel: "J. Schäfer", email: "j.schaefer@feuerwehr.de", password: "admin123" },
   ];
 
   async function handleQuickLogin(qEmail: string, qPassword: string) {

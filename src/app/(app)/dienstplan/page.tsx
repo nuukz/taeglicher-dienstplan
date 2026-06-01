@@ -142,7 +142,7 @@ function SchichtSection({
                     </span>
                   </div>
                   {isDeactivated && (
-                    <Badge variant="secondary">Ausser Dienst</Badge>
+                    <Badge variant="secondary">Außer Dienst</Badge>
                   )}
                 </div>
                 {mitbesetztVon && !isDeactivated && (
@@ -154,7 +154,7 @@ function SchichtSection({
               <CardContent>
                 {isDeactivated ? (
                   <p className="text-sm text-slate-400 italic">
-                    Fahrzeug ist an diesem Tag nicht verfuegbar.
+                    Fahrzeug ist an diesem Tag nicht verfügbar.
                   </p>
                 ) : (
                   <div className="space-y-1">
@@ -407,7 +407,7 @@ export default function DienstplanPage() {
             allVeroeffentlicht ? (
               <>
                 <Badge className="bg-emerald-100 text-emerald-700">
-                  Veroeffentlicht
+                  Veröffentlicht
                 </Badge>
                 {maxVersion > 0 && (
                   <Badge variant="outline" className="text-xs">
@@ -417,7 +417,7 @@ export default function DienstplanPage() {
               </>
             ) : anyVeroeffentlicht ? (
               <Badge className="bg-amber-100 text-amber-700">
-                Teilweise veroeffentlicht
+                Teilweise veröffentlicht
               </Badge>
             ) : (
               <Badge className="bg-yellow-100 text-yellow-700">Entwurf</Badge>

@@ -193,7 +193,7 @@ export function MonatsKalender({
               <path d="M2 6l3 3 5-5" />
             </svg>
           </span>
-          <span className="text-[11px] text-slate-500">Veroeffentlicht</span>
+          <span className="text-[11px] text-slate-500">Veröffentlicht</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="inline-block size-2.5 rounded-full bg-red-400 ring-2 ring-red-100" />
@@ -303,7 +303,7 @@ function MonthGrid({
                   : "text-slate-400 hover:bg-slate-100"
                 }
               `}
-              title={`${day}. ${MONATE[month]} – WA ${WA_NAMES[waIndex]}${hasAnyPlan ? (anyPublished ? " (veroeffentlicht)" : " (Entwurf)") : ""}`}
+              title={`${day}. ${MONATE[month]} – WA ${WA_NAMES[waIndex]}${hasAnyPlan ? (anyPublished ? " (veröffentlicht)" : " (Entwurf)") : ""}`}
             >
               {day}
 

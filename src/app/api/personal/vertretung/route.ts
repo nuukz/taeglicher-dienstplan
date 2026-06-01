@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(sanitized, { status: 201 });
   } catch (error: unknown) {
     if (error instanceof Error && error.message.includes("Foreign key constraint")) {
-      return NextResponse.json({ error: "Ungueltige Qualifikation" }, { status: 400 });
+      return NextResponse.json({ error: "Ungültige Qualifikation" }, { status: 400 });
     }
     console.error("POST /api/personal/vertretung error:", error);
     return NextResponse.json({ error: "Interner Serverfehler" }, { status: 500 });

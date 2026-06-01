@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createAbwesenheitSchema, deleteAbwesenheitSchema } from "@/lib/validations";
-import { requireRole } from "@/lib/permissions";
+import { requireRole, requireAbteilung, darfUser } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,6 +21,10 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Abteilungstrennung: nur eigene Abteilung (ausser SYSOP)
+    const denied = requireAbteilung(session, abteilungId);
+    if (denied) return denied;
 
     const datumDate = new Date(datum + "T00:00:00.000Z");
 
@@ -73,6 +77,22 @@ export async function POST(request: NextRequest) {
     }
 
     const { userId, datum, schicht, grund, notiz } = parsed.data;
+
+    // Abteilungstrennung: Ziel-User muss zur eigenen Abteilung gehoeren (Azubis ausgenommen)
+    const zielUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { abteilungId: true, beschaeftigung: true },
+    });
+    if (!zielUser) {
+      return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
+    }
+    if (!darfUser(session, zielUser)) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Benutzer" },
+        { status: 403 }
+      );
+    }
+
     const datumDate = new Date(datum + "T00:00:00.000Z");
     const schichtVal = schicht ?? null;
 
@@ -92,15 +112,35 @@ export async function POST(request: NextRequest) {
         data: { grund, notiz: notiz ?? null },
       });
     } else {
-      abwesenheit = await prisma.abwesenheit.create({
-        data: {
-          userId,
-          datum: datumDate,
-          schicht: schichtVal,
-          grund,
-          notiz: notiz ?? null,
-        },
-      });
+      try {
+        abwesenheit = await prisma.abwesenheit.create({
+          data: {
+            userId,
+            datum: datumDate,
+            schicht: schichtVal,
+            grund,
+            notiz: notiz ?? null,
+          },
+        });
+      } catch (err: unknown) {
+        // Race Condition: paralleler Request hat den Eintrag bereits angelegt
+        // (Unique-Constraint userId+datum+schicht) -> stattdessen aktualisieren.
+        if (err instanceof Error && err.message.includes("Unique constraint")) {
+          const concurrent = await prisma.abwesenheit.findFirst({
+            where: { userId, datum: datumDate, schicht: schichtVal },
+          });
+          if (concurrent) {
+            abwesenheit = await prisma.abwesenheit.update({
+              where: { id: concurrent.id },
+              data: { grund, notiz: notiz ?? null },
+            });
+          } else {
+            throw err;
+          }
+        } else {
+          throw err;
+        }
+      }
     }
 
     return NextResponse.json(abwesenheit, { status: 201 });
@@ -131,6 +171,22 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { userId, datum, schicht } = parsed.data;
+
+    // Abteilungstrennung: Ziel-User muss zur eigenen Abteilung gehoeren (Azubis ausgenommen)
+    const zielUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { abteilungId: true, beschaeftigung: true },
+    });
+    if (!zielUser) {
+      return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
+    }
+    if (!darfUser(session, zielUser)) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Benutzer" },
+        { status: 403 }
+      );
+    }
+
     const datumDate = new Date(datum + "T00:00:00.000Z");
     const schichtVal = schicht ?? null;
 

@@ -143,7 +143,7 @@ export function exportDienstplanPdf({
               `${z.sonderfunktion!.name}: ${z.user.nachname}`
           )
           .join(" | ");
-        body.push(["Sonderfkt.", sfText, ...Array(shownFahrzeuge.length - 1).fill("")]);
+        body.push(["Sonderfkt.", sfText, ...Array(Math.max(0, shownFahrzeuge.length - 1)).fill("")]);
       }
     }
 

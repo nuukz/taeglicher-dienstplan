@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { requireAbteilung } from "@/lib/permissions";
 
 // Leichtgewichtiger Endpunkt: Welche Tage haben Dienstpläne?
 // GET /api/dienstplan/kalender?von=2026-04-01&bis=2026-06-30&abteilungId=xxx
@@ -23,6 +24,10 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Abteilungstrennung: nur eigene Abteilung (ausser SYSOP)
+    const denied = requireAbteilung(session, abteilungId);
+    if (denied) return denied;
 
     const vonDate = new Date(von + "T00:00:00.000Z");
     const bisDate = new Date(bis + "T00:00:00.000Z");

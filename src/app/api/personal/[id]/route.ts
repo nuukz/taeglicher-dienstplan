@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { hash } from "bcryptjs";
 import { updateUserSchema } from "@/lib/validations";
-import { requireRole } from "@/lib/permissions";
+import { requireRole, darfUser, isSysop } from "@/lib/permissions";
 
 export async function GET(
   request: NextRequest,
@@ -26,6 +26,11 @@ export async function GET(
 
     if (!user) {
       return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
+    }
+
+    // Abteilungstrennung: nur Benutzer der eigenen Abteilung (Azubis ausgenommen)
+    if (!darfUser(session, user)) {
+      return NextResponse.json({ error: "Kein Zugriff auf diesen Benutzer" }, { status: 403 });
     }
 
     const { passwortHash: _passwortHash, ...sanitized } = user;
@@ -62,6 +67,34 @@ export async function PATCH(
     }
 
     const { passwort, ...data } = parsed.data;
+
+    // Ziel-User laden fuer Abteilungs-/Eskalations-Pruefung
+    const ziel = await prisma.user.findUnique({
+      where: { id },
+      select: { abteilungId: true, beschaeftigung: true },
+    });
+    if (!ziel) {
+      return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
+    }
+    if (!darfUser(session, ziel)) {
+      return NextResponse.json({ error: "Kein Zugriff auf diesen Benutzer" }, { status: 403 });
+    }
+
+    // Eskalation verhindern: SYSOP-Rolle und Abteilungswechsel nur durch SYSOP
+    if (!isSysop(session.user.rolle)) {
+      if (data.rolle === "SYSOP") {
+        return NextResponse.json(
+          { error: "Keine Berechtigung fuer diese Rolle" },
+          { status: 403 }
+        );
+      }
+      if (data.abteilungId && data.abteilungId !== session.user.abteilungId) {
+        return NextResponse.json(
+          { error: "Kein Zugriff auf diese Wachabteilung" },
+          { status: 403 }
+        );
+      }
+    }
 
     const updateData: Record<string, unknown> = { ...data };
 
@@ -106,6 +139,18 @@ export async function DELETE(
     if (denied) return denied;
 
     const { id } = await params;
+
+    // Ziel-User laden fuer Abteilungs-Pruefung
+    const ziel = await prisma.user.findUnique({
+      where: { id },
+      select: { abteilungId: true, beschaeftigung: true },
+    });
+    if (!ziel) {
+      return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
+    }
+    if (!darfUser(session, ziel)) {
+      return NextResponse.json({ error: "Kein Zugriff auf diesen Benutzer" }, { status: 403 });
+    }
 
     const user = await prisma.user.update({
       where: { id },

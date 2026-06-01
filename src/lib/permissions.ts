@@ -70,3 +70,54 @@ export function getAbteilungScope(user: {
   if (isSysop(user.rolle)) return null;
   return user.abteilungId;
 }
+
+/**
+ * Boolescher Check: Darf die Session auf diese Abteilung zugreifen?
+ * SYSOP darf alles, alle anderen nur die eigene Abteilung.
+ */
+export function darfAbteilung(
+  session: Session | null,
+  abteilungId: string
+): boolean {
+  if (!session?.user) return false;
+  if (isSysop(session.user.rolle)) return true;
+  return session.user.abteilungId === abteilungId;
+}
+
+/**
+ * API-Guard fuer die Abteilungstrennung: Gibt eine 401/403-Response zurueck,
+ * wenn die Session nicht auf die angegebene Abteilung zugreifen darf, sonst null.
+ *
+ * Beispiel:
+ *   const denied = requireAbteilung(session, abteilungId);
+ *   if (denied) return denied;
+ */
+export function requireAbteilung(
+  session: Session | null,
+  abteilungId: string
+): NextResponse | null {
+  if (!session?.user) {
+    return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
+  }
+  if (!darfAbteilung(session, abteilungId)) {
+    return NextResponse.json(
+      { error: "Kein Zugriff auf diese Wachabteilung" },
+      { status: 403 }
+    );
+  }
+  return null;
+}
+
+/**
+ * Check fuer User-bezogenen Zugriff. Azubis sind wachabteilungsuebergreifend
+ * und duerfen daher von jeder Abteilung verwaltet werden.
+ */
+export function darfUser(
+  session: Session | null,
+  user: { abteilungId: string; beschaeftigung: string }
+): boolean {
+  if (!session?.user) return false;
+  if (isSysop(session.user.rolle)) return true;
+  if (user.beschaeftigung === "AZUBI") return true;
+  return session.user.abteilungId === user.abteilungId;
+}

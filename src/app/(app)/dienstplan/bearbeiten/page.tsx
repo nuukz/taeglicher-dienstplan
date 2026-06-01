@@ -162,7 +162,7 @@ function DienstplanBearbeitenInner() {
       const datum = formatDateApi(currentDate);
 
       // Dienstplan sicherstellen
-      await Promise.all([
+      const ensureRes = await Promise.all([
         fetch("/api/dienstplan", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -174,6 +174,9 @@ function DienstplanBearbeitenInner() {
           body: JSON.stringify({ datum, schicht: "NACHT", abteilungId }),
         }),
       ]);
+      if (ensureRes.some((r) => !r.ok)) {
+        throw new Error("Dienstplan konnte nicht angelegt werden");
+      }
 
       // Parallel laden
       const [dpRes, abwRes] = await Promise.all([

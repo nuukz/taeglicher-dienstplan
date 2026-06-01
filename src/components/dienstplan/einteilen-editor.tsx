@@ -282,10 +282,22 @@ export function EinteilenEditor({
   const anyExists = !!(tagDienstplan || nachtDienstplan);
 
   // Zaehler
-  const totalPositions = activeFahrzeuge
-    .filter((f) => !deactivatedFahrzeuge.has(f.id))
-    .reduce((sum, f) => sum + f.positionen.length, 0);
-  const filledPositions = dienstplan?.zuweisungen.length ?? 0;
+  const sichtbareFahrzeuge = activeFahrzeuge.filter(
+    (f) => !deactivatedFahrzeuge.has(f.id)
+  );
+  const totalPositions = sichtbareFahrzeuge.reduce(
+    (sum, f) => sum + f.positionen.length,
+    0
+  );
+  // Nur Zuweisungen auf Positionen aktiver (nicht deaktivierter) Fahrzeuge zaehlen,
+  // sonst kann der Zaehler ueber das Maximum steigen (z.B. "5/3").
+  const sichtbarePositionIds = new Set(
+    sichtbareFahrzeuge.flatMap((f) => f.positionen.map((p) => p.id))
+  );
+  const filledPositions =
+    dienstplan?.zuweisungen.filter((z) =>
+      sichtbarePositionIds.has(z.fahrzeugPositionId)
+    ).length ?? 0;
 
   return (
     <div className="space-y-4">

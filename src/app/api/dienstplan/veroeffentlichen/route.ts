@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { veroeffentlichenSchema } from "@/lib/validations";
 import { sendDienstplanPublished } from "@/lib/push";
-import { requireRole } from "@/lib/permissions";
+import { requireRole, darfAbteilung } from "@/lib/permissions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,6 +47,11 @@ export async function POST(request: NextRequest) {
 
       if (!current) {
         throw new Error("Record to update not found");
+      }
+
+      // Abteilungstrennung: nur eigene Abteilung darf veroeffentlichen
+      if (!darfAbteilung(session, current.abteilungId)) {
+        throw new Error("Kein Zugriff auf diese Wachabteilung");
       }
 
       const newVersion = current.version + 1;
@@ -100,6 +105,15 @@ export async function POST(request: NextRequest) {
       error.message.includes("Record to update not found")
     ) {
       return NextResponse.json({ error: "Dienstplan nicht gefunden" }, { status: 404 });
+    }
+    if (
+      error instanceof Error &&
+      error.message.includes("Kein Zugriff auf diese Wachabteilung")
+    ) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diese Wachabteilung" },
+        { status: 403 }
+      );
     }
     console.error("POST /api/dienstplan/veroeffentlichen error:", error);
     return NextResponse.json({ error: "Interner Serverfehler" }, { status: 500 });

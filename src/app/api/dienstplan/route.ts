@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createDienstplanSchema } from "@/lib/validations";
-import { requireRole } from "@/lib/permissions";
+import { requireRole, requireAbteilung } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,6 +21,10 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Abteilungstrennung: nur eigene Abteilung (ausser SYSOP)
+    const denied = requireAbteilung(session, abteilungId);
+    if (denied) return denied;
 
     // Datum als Date-Objekt parsen (nur Datumsanteil)
     const datumDate = new Date(datum + "T00:00:00.000Z");
@@ -110,6 +114,11 @@ export async function POST(request: NextRequest) {
     }
 
     const { datum, schicht, abteilungId } = parsed.data;
+
+    // Abteilungstrennung: ADMIN darf nur fuer die eigene Abteilung anlegen
+    const abteilungDenied = requireAbteilung(session, abteilungId);
+    if (abteilungDenied) return abteilungDenied;
+
     const datumDate = new Date(datum + "T00:00:00.000Z");
 
     // Bestehenden Dienstplan suchen oder neuen erstellen

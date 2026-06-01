@@ -3,24 +3,25 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { hash } from "bcryptjs";
 import { createUserSchema } from "@/lib/validations";
-import { requireRole } from "@/lib/permissions";
+import { requireRole, getAbteilungScope, isSysop } from "@/lib/permissions";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const abteilungId = searchParams.get("abteilung");
+    // Abteilungstrennung wird serverseitig erzwungen, nicht aus der Query uebernommen:
+    // SYSOP sieht alle, alle anderen nur die eigene Abteilung + (WA-uebergreifende) Azubis.
+    const scope = getAbteilungScope(session.user);
 
     const users = await prisma.user.findMany({
       where: {
-        ...(abteilungId
+        ...(scope
           ? {
               OR: [
-                { abteilungId },
+                { abteilungId: scope },
                 { beschaeftigung: "AZUBI" },
               ],
             }
@@ -71,6 +72,22 @@ export async function POST(request: NextRequest) {
     }
 
     const { passwort, ...data } = parsed.data;
+
+    // Abteilungstrennung: ADMIN darf nur fuer die eigene Abteilung anlegen
+    if (!isSysop(session.user.rolle) && data.abteilungId !== session.user.abteilungId) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diese Wachabteilung" },
+        { status: 403 }
+      );
+    }
+    // Rollen-Eskalation: nur SYSOP darf SYSOP-Rollen vergeben
+    if (data.rolle === "SYSOP" && !isSysop(session.user.rolle)) {
+      return NextResponse.json(
+        { error: "Keine Berechtigung fuer diese Rolle" },
+        { status: 403 }
+      );
+    }
+
     const passwortHash = await hash(passwort, 12);
 
     const user = await prisma.user.create({

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createZuweisungSchema, deleteZuweisungSchema } from "@/lib/validations";
-import { requireRole } from "@/lib/permissions";
+import { requireRole, darfAbteilung } from "@/lib/permissions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +25,21 @@ export async function POST(request: NextRequest) {
     }
 
     const { dienstplanId, userId, fahrzeugPositionId, sonderfunktionId } = parsed.data;
+
+    // Abteilungstrennung: Dienstplan muss zur eigenen Abteilung gehoeren
+    const dienstplan = await prisma.dienstplan.findUnique({
+      where: { id: dienstplanId },
+      select: { abteilungId: true },
+    });
+    if (!dienstplan) {
+      return NextResponse.json({ error: "Dienstplan nicht gefunden" }, { status: 404 });
+    }
+    if (!darfAbteilung(session, dienstplan.abteilungId)) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diese Wachabteilung" },
+        { status: 403 }
+      );
+    }
 
     // Prüfen ob die Position schon besetzt ist
     const existingPosition = await prisma.zuweisung.findUnique({
@@ -140,6 +155,21 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { error: "Validierungsfehler", details: parsed.error.flatten() },
         { status: 400 }
+      );
+    }
+
+    // Abteilungstrennung: Zuweisung muss zu einem Dienstplan der eigenen Abteilung gehoeren
+    const bestehend = await prisma.zuweisung.findUnique({
+      where: { id: parsed.data.zuweisungId },
+      select: { dienstplan: { select: { abteilungId: true } } },
+    });
+    if (!bestehend) {
+      return NextResponse.json({ error: "Zuweisung nicht gefunden" }, { status: 404 });
+    }
+    if (!darfAbteilung(session, bestehend.dienstplan.abteilungId)) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diese Wachabteilung" },
+        { status: 403 }
       );
     }
 

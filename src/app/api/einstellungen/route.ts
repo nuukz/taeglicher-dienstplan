@@ -29,7 +29,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
     }
 
-    const denied = requireRole(session, "ADMIN");
+    const denied = requireRole(session, "SYSOP");
     if (denied) return denied;
 
     const body = await request.json();

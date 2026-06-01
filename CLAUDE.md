@@ -23,10 +23,10 @@ Tagesdienstplan-System fuer die Feuerwehr. Admins (Wachhabende) teilen Kollegen 
 - **Env-Vars:** `.env` (nicht im Git!) - DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, VAPID-Keys
 
 ## Datenmodell (Prisma)
-- **User** - Kollegen mit Rolle (ADMIN/KOLLEGE), Beschaeftigung (BEAMTER/ANGESTELLTER/AZUBI), abteilungId. Azubis sind wachabteilungsuebergreifend und erscheinen in allen WA-Einteilungen.
-- **Abteilung** - Wachabteilungen (WA1, WA2, WA3), jeweils mit eigenen Fahrzeugen
-- **Fahrzeug** - Einsatzfahrzeuge pro Abteilung, mit Positionen (FahrzeugPosition)
-- **Sonderfunktion** - Zusaetzliche Funktionen (Wachhabender, Atemschutz, etc.)
+- **User** - Kollegen mit Rolle (SYSOP/ADMIN/KOLLEGE), Beschaeftigung (BEAMTER/ANGESTELLTER/AZUBI), abteilungId. Azubis sind wachabteilungsuebergreifend und erscheinen in allen WA-Einteilungen.
+- **Abteilung** - Wachabteilungen (WA1, WA2, WA3)
+- **Fahrzeug** - Einsatzfahrzeuge, mit Positionen (FahrzeugPosition). GLOBAL (geteilter Fuhrpark, kein `abteilungId`, `name` ist `@unique`) - alle Abteilungen nutzen dieselben Fahrzeuge. Verwaltung nur durch SYSOP.
+- **Sonderfunktion** - Zusaetzliche Funktionen (Wachhabender, Atemschutz, etc.). GLOBAL, SYSOP-verwaltet.
 - **Dienstplan** - Tagesplan pro Abteilung/Datum, mit `veroeffentlicht`-Flag
 - **TagesFahrzeug** - Fahrzeug-Aktivierung pro Tag (aktiv/inaktiv)
 - **Zuweisung** - Kollege → Position + Schicht + optional Sonderfunktion
@@ -34,6 +34,14 @@ Tagesdienstplan-System fuer die Feuerwehr. Admins (Wachhabende) teilen Kollegen 
 - **UserQualifikation** - Many-to-Many Join (User ↔ Qualifikation)
 - **Abwesenheit** - Pro User/Datum/Schicht mit Grund (KRANK, URLAUB, FORTBILDUNG, FREI, SONSTIGES)
 - 3 Migrationen: `init`, `add_qualifikationen`, `add_abwesenheit`
+
+## Berechtigungen & Abteilungstrennung (WICHTIG)
+Zentrale Helper in `src/lib/permissions.ts`. Jede schreibende/lesende API-Route muss sie nutzen:
+- **Rollen:** SYSOP (alles, abteilungsuebergreifend) > ADMIN (Wachhabender, nur eigene WA) > KOLLEGE.
+- **Abteilungstrennung:** ADMIN/KOLLEGE duerfen NUR ihre eigene Abteilung sehen/aendern. `abteilungId` kommt NIE ungeprueft aus Query/Body - immer gegen `session.user.abteilungId` validieren via `requireAbteilung(session, abteilungId)` bzw. `darfAbteilung(...)`. Bei per-ID adressierten Objekten (Dienstplan, Zuweisung, User) erst laden, dann Abteilung pruefen.
+- **Azubi-Ausnahme:** Azubis sind WA-uebergreifend - `darfUser(session, user)` laesst Zugriff fuer jede WA zu.
+- **Globale Stammdaten (Fahrzeug, Sonderfunktion, SchichtKonfiguration, Abteilung, Qualifikation):** Schreiben nur SYSOP (`requireRole(session, "SYSOP")`), Lesen fuer alle. ADMIN darf sie NICHT aendern (wuerde alle WA betreffen).
+- **Rollen-Eskalation:** SYSOP-Rolle und Abteilungswechsel nur durch SYSOP vergebbar (in den Personal-Routen geprueft, nicht nur im Zod-Schema).
 
 ## Bearbeitungs-Workflow (2 Schritte)
 1. **Verfuegbarkeit** (`verfuegbarkeit-editor.tsx`): Wer ist abwesend? Grund waehlen per Select-Dropdown.

@@ -4,6 +4,9 @@ import type { NextAuthConfig } from "next-auth";
 // Wird von der Middleware verwendet
 export const authConfig: NextAuthConfig = {
   trustHost: true,
+  // NextAuth v5 erwartet AUTH_SECRET. Wir akzeptieren weiterhin NEXTAUTH_SECRET,
+  // damit die App im Produktionsbetrieb (Hetzner) nicht mit MissingSecret abbricht.
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/login",
   },

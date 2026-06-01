@@ -14,7 +14,7 @@ export async function POST(
       return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
     }
 
-    const denied = requireRole(session, "ADMIN");
+    const denied = requireRole(session, "SYSOP");
     if (denied) return denied;
 
     const { id: fahrzeugId } = await params;
@@ -86,7 +86,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
     }
 
-    const denied = requireRole(session, "ADMIN");
+    const denied = requireRole(session, "SYSOP");
     if (denied) return denied;
 
     const { id: fahrzeugId } = await params;

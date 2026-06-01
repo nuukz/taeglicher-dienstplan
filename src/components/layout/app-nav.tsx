@@ -34,9 +34,9 @@ interface NavItem {
 const allNavItems: NavItem[] = [
   { href: "/dienstplan", label: "Dienstplan", icon: CalendarDays, minRole: "KOLLEGE" },
   { href: "/personal", label: "Personal", icon: Users, minRole: "ADMIN" },
-  { href: "/fahrzeuge", label: "Fahrzeuge", icon: Truck, minRole: "ADMIN" },
-  { href: "/sonderfunktionen", label: "Sonderfunktionen", icon: Star, minRole: "ADMIN" },
-  { href: "/einstellungen", label: "Einstellungen", icon: Settings, minRole: "ADMIN" },
+  { href: "/fahrzeuge", label: "Fahrzeuge", icon: Truck, minRole: "SYSOP" as Rolle },
+  { href: "/sonderfunktionen", label: "Sonderfunktionen", icon: Star, minRole: "SYSOP" as Rolle },
+  { href: "/einstellungen", label: "Einstellungen", icon: Settings, minRole: "SYSOP" as Rolle },
   { href: "/wachen", label: "Wachen", icon: Building2, minRole: "SYSOP" as Rolle },
   { href: "/qualifikationen", label: "Qualifikationen", icon: Award, minRole: "SYSOP" as Rolle },
 ];
@@ -93,6 +93,7 @@ interface AppNavProps {
 
 export function DesktopSidebar({ vorname, rolle, abteilungName }: AppNavProps) {
   const visibleNavItems = allNavItems.filter((item) => hasMinRole(rolle, item.minRole));
+  const waLabel = rolle === "SYSOP" ? "Systemverwaltung" : `WA ${abteilungName}`;
 
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:bg-slate-900">
@@ -100,7 +101,7 @@ export function DesktopSidebar({ vorname, rolle, abteilungName }: AppNavProps) {
         <CalendarDays className="size-6 text-red-500" />
         <div>
           <h1 className="text-lg font-bold text-white leading-tight">WachPlan</h1>
-          <p className="text-[10px] text-slate-400">WA {abteilungName}</p>
+          <p className="text-[10px] text-slate-400">{waLabel}</p>
         </div>
       </Link>
       <nav className="flex-1 space-y-1 px-3 py-4">
@@ -126,6 +127,7 @@ export function DesktopSidebar({ vorname, rolle, abteilungName }: AppNavProps) {
 
 export function MobileHeader({ vorname, rolle, abteilungName }: AppNavProps) {
   const visibleNavItems = allNavItems.filter((item) => hasMinRole(rolle, item.minRole));
+  const waLabel = rolle === "SYSOP" ? "Systemverwaltung" : `WA ${abteilungName}`;
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-slate-900 px-4 md:hidden">
@@ -145,7 +147,7 @@ export function MobileHeader({ vorname, rolle, abteilungName }: AppNavProps) {
               <CalendarDays className="size-6 text-red-500" />
               <div>
                 <span className="text-lg font-bold text-white">WachPlan</span>
-                <p className="text-[10px] text-slate-400">WA {abteilungName}</p>
+                <p className="text-[10px] text-slate-400">{waLabel}</p>
               </div>
             </Link>
             <nav className="space-y-1 px-3 py-4">
@@ -159,7 +161,7 @@ export function MobileHeader({ vorname, rolle, abteilungName }: AppNavProps) {
           </SheetContent>
         </Sheet>
         <Link href="/dienstplan" className="text-base font-bold text-white hover:text-slate-200">
-          WachPlan <span className="text-xs font-normal text-slate-400">WA {abteilungName}</span>
+          WachPlan <span className="text-xs font-normal text-slate-400">{waLabel}</span>
         </Link>
       </div>
       <div className="flex items-center gap-2">

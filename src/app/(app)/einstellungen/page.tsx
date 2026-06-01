@@ -14,6 +14,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import { FahrzeugDienstzeiten } from "@/components/einstellungen/fahrzeug-dienstzeiten";
 
 // ----------------------------------------------------------------
 // Types
@@ -150,7 +151,7 @@ export default function EinstellungenPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Einstellungen</h1>
         <p className="text-sm text-slate-500">
-          Schichtzeiten fuer Tag- und Nachtschicht konfigurieren.
+          Schichtzeiten und Fahrzeug-Dienstzeiten konfigurieren.
         </p>
       </div>
 
@@ -276,6 +277,19 @@ export default function EinstellungenPage() {
           </CardFooter>
         </Card>
       </div>
+
+      {/* Fahrzeug-Dienstzeiten */}
+      <div className="pt-2">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Fahrzeug-Dienstzeiten
+        </h2>
+        <p className="text-sm text-slate-500">
+          Festlegen, wann ein Fahrzeug normalerweise im Dienst ist (pro Wochentag
+          und Schicht). Nicht im Dienst stehende Fahrzeuge werden beim Anlegen
+          eines Dienstplans automatisch als inaktiv vorbelegt.
+        </p>
+      </div>
+      <FahrzeugDienstzeiten />
     </div>
   );
 }

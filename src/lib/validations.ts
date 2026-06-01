@@ -48,6 +48,19 @@ export const deletePositionSchema = z.object({
   positionId: z.string().min(1, "Position-ID ist erforderlich"),
 });
 
+export const updateFahrzeugDienstzeitSchema = z.object({
+  fahrzeugId: z.string().min(1, "Fahrzeug-ID ist erforderlich"),
+  eintraege: z
+    .array(
+      z.object({
+        wochentag: z.number().int().min(0).max(6), // 0 = Montag ... 6 = Sonntag
+        schicht: z.enum(["TAG", "NACHT"]),
+        imDienst: z.boolean(),
+      })
+    )
+    .max(14, "Maximal 14 Eintraege (7 Tage x 2 Schichten)"),
+});
+
 // --- Sonderfunktionen ---
 
 export const createSonderfunktionSchema = z.object({

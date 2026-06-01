@@ -92,7 +92,13 @@ function DienstplanBearbeitenInner() {
   const [showCalendar, setShowCalendar] = useState(true);
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1));
 
-  const abteilungId = session?.user?.abteilungId;
+  const isSysop = session?.user?.rolle === "SYSOP";
+  const waParam = searchParams.get("wa");
+  // SYSOP darf jede Abteilung bearbeiten (?wa=...), alle anderen nur die eigene
+  const abteilungId =
+    isSysop && waParam ? waParam : session?.user?.abteilungId;
+
+  const [abteilungen, setAbteilungen] = useState<{ id: string; name: string }[]>([]);
 
   // Access check
   useEffect(() => {
@@ -102,12 +108,15 @@ function DienstplanBearbeitenInner() {
     }
   }, [session, sessionStatus, router]);
 
-  // URL aktualisieren
+  // URL aktualisieren (wa-Auswahl des SYSOP erhalten)
   useEffect(() => {
     if (!abteilungId) return;
     const datum = formatDateApi(currentDate);
-    router.replace(`/dienstplan/bearbeiten?datum=${datum}`, { scroll: false });
-  }, [currentDate, abteilungId, router]);
+    const waSuffix = isSysop && waParam ? `&wa=${waParam}` : "";
+    router.replace(`/dienstplan/bearbeiten?datum=${datum}${waSuffix}`, {
+      scroll: false,
+    });
+  }, [currentDate, abteilungId, router, isSysop, waParam]);
 
   // Stammdaten laden
   const fetchBaseData = useCallback(async () => {
@@ -139,6 +148,7 @@ function DienstplanBearbeitenInner() {
       setSonderfunktionen(sfData);
       setSchichtZeiten(zeitData);
 
+      setAbteilungen(abtData);
       if (abtData.length > 0 && abteilungId) {
         const abt = abtData.find((a: { id: string; name: string }) => a.id === abteilungId);
         if (abt) setAbteilungName(abt.name);
@@ -299,6 +309,37 @@ function DienstplanBearbeitenInner() {
           </p>
         </div>
       </div>
+
+      {/* SYSOP: Wachabteilung waehlen */}
+      {isSysop && abteilungen.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-slate-500">
+            Wachabteilung:
+          </span>
+          <div className="inline-flex rounded-lg border bg-white p-0.5">
+            {abteilungen.map((a) => (
+              <button
+                key={a.id}
+                onClick={() =>
+                  router.replace(
+                    `/dienstplan/bearbeiten?datum=${formatDateApi(
+                      currentDate
+                    )}&wa=${a.id}`,
+                    { scroll: false }
+                  )
+                }
+                className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                  abteilungId === a.id
+                    ? "bg-red-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                WA {a.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Date Navigation */}
       <div className="flex items-center gap-2">

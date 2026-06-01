@@ -66,7 +66,7 @@ async function main() {
     { name: "RTW Berta", typ: "Rettungswagen", reihenfolge: 2, positionen: ["Fahrer", "Beifahrer"] },
     { name: "RTW Cäsar", typ: "Rettungswagen", reihenfolge: 3, positionen: ["Fahrer", "Beifahrer"] },
     { name: "RTW Dora", typ: "Rettungswagen", reihenfolge: 4, positionen: ["Fahrer", "Beifahrer"] },
-    { name: "HLF", typ: "Hilfeleistungslöschfahrzeug", reihenfolge: 5, positionen: ["Maschinist", "Fahrzeugführer", "Angriffstrupp 1", "Angriffstrupp 2", "Wassertrupp 1", "Wassertrupp 2", "Schlauchtrupp 1", "Schlauchtrupp 2"] },
+    { name: "HLF", typ: "Hamburger Löschfahrzeug", reihenfolge: 5, positionen: ["Maschinist", "Fahrzeugführer", "Angriffstrupp 1", "Angriffstrupp 2", "Wassertrupp 1", "Wassertrupp 2", "Schlauchtrupp 1", "Schlauchtrupp 2"] },
     { name: "DL", typ: "Drehleiter", reihenfolge: 6, positionen: ["Maschinist", "Fahrzeugführer"] },
     { name: "ELW", typ: "Einsatzleitwagen", reihenfolge: 7, positionen: ["C-Dienst"] },
     { name: "GW MANV", typ: "Gerätewagen MANV", reihenfolge: 8, positionen: ["Fahrer", "Beifahrer"] },

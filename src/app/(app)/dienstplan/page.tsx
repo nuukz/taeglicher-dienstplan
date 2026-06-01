@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -216,10 +216,14 @@ function SchichtSection({
 export default function DienstplanPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isSysop = session?.user?.rolle === "SYSOP";
+  const waParam = searchParams.get("wa");
 
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedAbteilung, setSelectedAbteilung] = useState<string>("");
   const [abteilungName, setAbteilungName] = useState<string>("");
+  const [abteilungen, setAbteilungen] = useState<Abteilung[]>([]);
   const [dienstplanData, setDienstplanData] =
     useState<DienstplanResponse | null>(null);
   const [fahrzeuge, setFahrzeuge] = useState<FahrzeugData[]>([]);
@@ -255,11 +259,13 @@ export default function DienstplanPage() {
 
       setFahrzeuge(fzData);
       setSchichtZeiten(zeitData);
+      setAbteilungen(abtData);
 
-      // Nur eigene Abteilung
-      if (session?.user?.abteilungId) {
-        setSelectedAbteilung(session.user.abteilungId);
-        const abt = abtData.find((a: Abteilung) => a.id === session.user.abteilungId);
+      // SYSOP darf jede Abteilung waehlen (?wa=...), alle anderen nur die eigene
+      const ziel = isSysop && waParam ? waParam : session?.user?.abteilungId;
+      if (ziel) {
+        setSelectedAbteilung(ziel);
+        const abt = abtData.find((a: Abteilung) => a.id === ziel);
         if (abt) setAbteilungName(abt.name);
       }
     } catch (err) {
@@ -267,7 +273,7 @@ export default function DienstplanPage() {
     } finally {
       setLoading(false);
     }
-  }, [session?.user?.abteilungId]);
+  }, [session?.user?.abteilungId, isSysop, waParam]);
 
   useEffect(() => {
     fetchBaseData();
@@ -316,6 +322,14 @@ export default function DienstplanPage() {
 
   function goToToday() {
     setCurrentDate(new Date());
+  }
+
+  // SYSOP: aktive Wachabteilung wechseln (URL bleibt Quelle der Wahrheit)
+  function selectAbteilung(id: string) {
+    setSelectedAbteilung(id);
+    const abt = abteilungen.find((a) => a.id === id);
+    if (abt) setAbteilungName(abt.name);
+    router.replace(`/dienstplan?wa=${id}`, { scroll: false });
   }
 
   // ----------------------------------------------------------
@@ -421,7 +435,9 @@ export default function DienstplanPage() {
               variant="default"
               onClick={() =>
                 router.push(
-                  `/dienstplan/bearbeiten?datum=${formatDateApi(currentDate)}`
+                  `/dienstplan/bearbeiten?datum=${formatDateApi(currentDate)}${
+                    isSysop && selectedAbteilung ? `&wa=${selectedAbteilung}` : ""
+                  }`
                 )
               }
             >
@@ -432,8 +448,32 @@ export default function DienstplanPage() {
         </div>
       </div>
 
+      {/* SYSOP: Wachabteilung waehlen */}
+      {isSysop && abteilungen.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-slate-500">
+            Wachabteilung:
+          </span>
+          <div className="inline-flex rounded-lg border bg-white p-0.5">
+            {abteilungen.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => selectAbteilung(a.id)}
+                className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                  selectedAbteilung === a.id
+                    ? "bg-red-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                WA {a.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Date Navigation */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={goToPreviousDay}>
             <ChevronLeft className="size-4" />

@@ -126,8 +126,28 @@ model Fahrzeug {
 
   positionen     FahrzeugPosition[]
   tagesFahrzeuge TagesFahrzeug[]
+  dienstzeiten   FahrzeugDienstzeit[]
 
   @@map("dp_fahrzeug")
+}
+
+// --- FahrzeugDienstzeit ---
+// Standard-Wochenvorlage pro Fahrzeug: an welchen Wochentagen + Schichten ist das
+// Fahrzeug normalerweise im Dienst. Global (SYSOP). Wird beim Anlegen eines
+// Dienstplans angewendet, um nicht-im-Dienst-Fahrzeuge als inaktiv vorzubelegen.
+model FahrzeugDienstzeit {
+  id         String     @id @default(cuid())
+  fahrzeugId String
+  wochentag  Int        // 0 = Montag ... 6 = Sonntag
+  schicht    SchichtTyp // TAG | NACHT
+  imDienst   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  fahrzeug Fahrzeug @relation(fields: [fahrzeugId], references: [id], onDelete: Cascade)
+
+  @@unique([fahrzeugId, wochentag, schicht])
+  @@map("dp_fahrzeug_dienstzeit")
 }
 
 // --- FahrzeugPosition ---

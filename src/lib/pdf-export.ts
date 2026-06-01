@@ -6,6 +6,7 @@ import type {
   SchichtKonfiguration,
   ZuweisungData,
 } from "@/types/dienstplan";
+import { getAnzeigeQuelle } from "@/lib/mitbesetzung";
 
 function getSchichtZeitraum(
   schicht: "TAG" | "NACHT",
@@ -76,9 +77,15 @@ export function exportDienstplanPdf({
       }
     }
 
-    const shownFahrzeuge = activeFahrzeuge.filter(
-      (f) => !deactivated.has(f.id)
-    );
+    const shownRaw = activeFahrzeuge.filter((f) => !deactivated.has(f.id));
+    // Mitbesetzte Fahrzeuge (GW MANV, GW) spiegeln die Positionen ihres Mutterfahrzeugs
+    const shownFahrzeuge = shownRaw.map((f) => {
+      const q = getAnzeigeQuelle(f, fahrzeuge);
+      return {
+        label: q.mitbesetztVon ? `${f.name} (von ${q.mitbesetztVon})` : f.name,
+        positionen: q.positionen,
+      };
+    });
 
     // Zuweisungen-Map
     const zuweisungByPosition = new Map<string, ZuweisungData>();
@@ -101,7 +108,7 @@ export function exportDienstplanPdf({
     );
 
     // Spaltenkoepfe
-    const head = [["Position", ...shownFahrzeuge.map((f) => f.name)]];
+    const head = [["Position", ...shownFahrzeuge.map((f) => f.label)]];
 
     // Tabellenzeilen
     const body: string[][] = [];

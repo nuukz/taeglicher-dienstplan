@@ -33,6 +33,7 @@ import type {
   SchichtKonfiguration,
   ZuweisungData,
 } from "@/types/dienstplan";
+import { einteilbareFahrzeuge } from "@/lib/mitbesetzung";
 
 // ----------------------------------------------------------------
 // Quali-Validation Helpers
@@ -131,7 +132,8 @@ export function EinteilenEditor({
     }
   }
 
-  const activeFahrzeuge = fahrzeuge.filter((f) => f.aktiv);
+  // Mitbesetzte Kinder (GW MANV, GW) werden nicht separat eingeteilt
+  const activeFahrzeuge = einteilbareFahrzeuge(fahrzeuge.filter((f) => f.aktiv));
 
   // Kollegen aufteilen: regulaere vs. Azubis
   const regulaereKollegen = verfuegbareKollegen.filter(

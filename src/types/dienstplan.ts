@@ -30,6 +30,7 @@ export interface FahrzeugData {
   typ: string;
   aktiv: boolean;
   reihenfolge: number;
+  parentFahrzeugId?: string | null; // mitbesetzt von diesem Fahrzeug (spiegelt dessen Mannschaft)
   positionen: FahrzeugPositionData[];
 }
 

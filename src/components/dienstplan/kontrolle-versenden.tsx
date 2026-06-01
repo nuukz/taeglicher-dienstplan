@@ -16,6 +16,7 @@ import type {
   FahrzeugData,
   SchichtKonfiguration,
 } from "@/types/dienstplan";
+import { getAnzeigeQuelle } from "@/lib/mitbesetzung";
 
 interface KontrolleVersendenProps {
   datum: string;
@@ -41,6 +42,7 @@ function zeitraum(
 interface Uebersicht {
   fahrzeuge: {
     name: string;
+    mitbesetztVon: string | null;
     positionen: { name: string; person: string | null }[];
   }[];
   sonderfunktionen: string[];
@@ -74,13 +76,21 @@ function berechneUebersicht(
   let total = 0;
   let besetzt = 0;
   const fz = sichtbar.map((f) => {
-    const positionen = f.positionen.map((p) => {
-      total += 1;
+    const { positionen: quellPos, mitbesetztVon } = getAnzeigeQuelle(
+      f,
+      fahrzeuge
+    );
+    const positionen = quellPos.map((p) => {
       const person = zuwByPos.get(p.id) ?? null;
-      if (person) besetzt += 1;
+      // Mitbesetzte Fahrzeuge spiegeln nur und werden NICHT mitgezaehlt
+      // (sonst wuerde die Mannschaft doppelt gezaehlt).
+      if (!mitbesetztVon) {
+        total += 1;
+        if (person) besetzt += 1;
+      }
       return { name: p.name, person };
     });
-    return { name: f.name, positionen };
+    return { name: f.name, mitbesetztVon, positionen };
   });
 
   return {
@@ -152,6 +162,11 @@ function SchichtKontrolle({
                 >
                   <p className="mb-1 text-sm font-semibold text-slate-800">
                     {f.name}
+                    {f.mitbesetztVon && (
+                      <span className="ml-1 text-xs font-normal text-blue-600">
+                        (von {f.mitbesetztVon})
+                      </span>
+                    )}
                   </p>
                   <ul className="space-y-0.5">
                     {f.positionen.map((p, i) => (

@@ -124,6 +124,12 @@ model Fahrzeug {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Mit-Besetzung: dieses Fahrzeug wird von parent mitbesetzt und spiegelt
+  // dessen Mannschaft (z.B. GW MANV <- HLF, GW <- RTW Kaufmann).
+  parentFahrzeugId String?
+  parent           Fahrzeug?  @relation("MitBesetzung", fields: [parentFahrzeugId], references: [id], onDelete: SetNull)
+  kinder           Fahrzeug[] @relation("MitBesetzung")
+
   positionen     FahrzeugPosition[]
   tagesFahrzeuge TagesFahrzeug[]
   dienstzeiten   FahrzeugDienstzeit[]

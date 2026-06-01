@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { exportDienstplanPdf } from "@/lib/pdf-export";
+import { getAnzeigeQuelle } from "@/lib/mitbesetzung";
 import { MonatsKalender } from "@/components/dienstplan/monats-kalender";
 import type {
   Abteilung,
@@ -121,6 +122,10 @@ function SchichtSection({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {activeFahrzeuge.map((fahrzeug) => {
           const isDeactivated = deactivatedFahrzeuge.has(fahrzeug.id);
+          const { positionen, mitbesetztVon } = getAnzeigeQuelle(
+            fahrzeug,
+            fahrzeuge
+          );
 
           return (
             <Card
@@ -140,6 +145,11 @@ function SchichtSection({
                     <Badge variant="secondary">Ausser Dienst</Badge>
                   )}
                 </div>
+                {mitbesetztVon && !isDeactivated && (
+                  <p className="text-xs text-blue-600">
+                    mitbesetzt von {mitbesetztVon}
+                  </p>
+                )}
               </CardHeader>
               <CardContent>
                 {isDeactivated ? (
@@ -148,7 +158,7 @@ function SchichtSection({
                   </p>
                 ) : (
                   <div className="space-y-1">
-                    {fahrzeug.positionen.map((pos) => {
+                    {positionen.map((pos) => {
                       const zuweisung = zuweisungByPosition.get(pos.id);
                       const isCurrentUser =
                         zuweisung && zuweisung.userId === currentUserId;

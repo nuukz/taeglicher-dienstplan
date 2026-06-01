@@ -66,11 +66,12 @@ async function main() {
     { name: "RTW Berta", typ: "Rettungswagen", reihenfolge: 2, positionen: ["Fahrer", "Beifahrer", "Azubi"] },
     { name: "RTW Cäsar", typ: "Rettungswagen", reihenfolge: 3, positionen: ["Fahrer", "Beifahrer", "Azubi"] },
     { name: "RTW Dora", typ: "Rettungswagen", reihenfolge: 4, positionen: ["Fahrer", "Beifahrer", "Azubi"] },
-    { name: "HLF", typ: "Hamburger Löschfahrzeug", reihenfolge: 5, positionen: ["Maschinist", "Fahrzeugführer", "Angriffstrupp 1", "Angriffstrupp 2", "Wassertrupp 1", "Wassertrupp 2", "Schlauchtrupp 1", "Schlauchtrupp 2"] },
+    { name: "HLF", typ: "Hamburger Löschfahrzeug", reihenfolge: 5, positionen: ["Maschinist", "Fahrzeugführer", "Angriffstrupp 1", "Angriffstrupp 2", "Wassertrupp 1", "Wassertrupp 2"] },
     { name: "DL", typ: "Drehleiter", reihenfolge: 6, positionen: ["Maschinist", "Fahrzeugführer"] },
-    { name: "ELW", typ: "Einsatzleitwagen", reihenfolge: 7, positionen: ["C-Dienst"] },
+    { name: "ELW", typ: "Einsatzleitwagen", reihenfolge: 7, positionen: ["Wachabteilungsführer", "Maschinist"] },
     { name: "GW MANV", typ: "Gerätewagen MANV", reihenfolge: 8, positionen: ["Fahrer", "Beifahrer"] },
     { name: "RTW Kaufmann", typ: "Rettungswagen", reihenfolge: 9, positionen: ["Fahrer", "Beifahrer"] },
+    { name: "GW", typ: "Gerätewagen", reihenfolge: 10, positionen: [] as string[] },
   ];
 
   const fahrzeugMap: Record<string, { id: string; positionen: Record<string, string> }> = {};
@@ -94,6 +95,17 @@ async function main() {
     }
     console.log(`Fahrzeug ${fz.name} mit ${fz.positionen.length} Positionen erstellt`);
   }
+
+  // Mit-Besetzung: GW MANV wird vom HLF besetzt, GW vom RTW Kaufmann (spiegeln deren Mannschaft)
+  await prisma.fahrzeug.update({
+    where: { name: "GW MANV" },
+    data: { parentFahrzeugId: fahrzeugMap["HLF"].id },
+  });
+  await prisma.fahrzeug.update({
+    where: { name: "GW" },
+    data: { parentFahrzeugId: fahrzeugMap["RTW Kaufmann"].id },
+  });
+  console.log("Mit-Besetzung gesetzt (GW MANV <- HLF, GW <- Kaufmann)");
 
   // --- Sonderfunktionen ---
   const sonderfunktionNamen = ["Koch", "Tagesdienst", "Schirmmeister", "Atemschutzwerkstatt", "Schlauchpflege"];
@@ -343,11 +355,9 @@ async function main() {
     { email: "c.koch@feuerwehr.de", fahrzeug: "HLF", position: "Angriffstrupp 2" },
     { email: "m.braun@feuerwehr.de", fahrzeug: "HLF", position: "Wassertrupp 1" },
     { email: "k.zimmermann@feuerwehr.de", fahrzeug: "HLF", position: "Wassertrupp 2" },
-    { email: "f.hartmann@feuerwehr.de", fahrzeug: "HLF", position: "Schlauchtrupp 1" },
-    { email: "d.schwarz@feuerwehr.de", fahrzeug: "HLF", position: "Schlauchtrupp 2" },
     { email: "r.krause@feuerwehr.de", fahrzeug: "DL", position: "Maschinist" },
     { email: "t.lange@feuerwehr.de", fahrzeug: "DL", position: "Fahrzeugführer" },
-    { email: "admin@feuerwehr.de", fahrzeug: "ELW", position: "C-Dienst" },
+    { email: "admin@feuerwehr.de", fahrzeug: "ELW", position: "Wachabteilungsführer" },
     { email: "l.werner@feuerwehr.de", fahrzeug: "GW MANV", position: "Fahrer", sonderfunktion: "Koch" },
     { email: "h.schmitz@feuerwehr.de", fahrzeug: "GW MANV", position: "Beifahrer", sonderfunktion: "Schirmmeister" },
   ]);
@@ -369,7 +379,7 @@ async function main() {
     { email: "d.wagner@feuerwehr.de", fahrzeug: "HLF", position: "Wassertrupp 2" },
     { email: "r.krause@feuerwehr.de", fahrzeug: "DL", position: "Maschinist" },
     { email: "l.werner@feuerwehr.de", fahrzeug: "DL", position: "Fahrzeugführer" },
-    { email: "admin@feuerwehr.de", fahrzeug: "ELW", position: "C-Dienst" },
+    { email: "admin@feuerwehr.de", fahrzeug: "ELW", position: "Wachabteilungsführer" },
     { email: "h.schmitz@feuerwehr.de", fahrzeug: "GW MANV", position: "Fahrer" },
   ]);
   // RTW Dora nachts deaktiviert
@@ -394,11 +404,9 @@ async function main() {
     { email: "m.peters@feuerwehr.de", fahrzeug: "HLF", position: "Angriffstrupp 2" },
     { email: "j.scholz@feuerwehr.de", fahrzeug: "HLF", position: "Wassertrupp 1" },
     { email: "d.sommer@feuerwehr.de", fahrzeug: "HLF", position: "Wassertrupp 2" },
-    { email: "h.winter@feuerwehr.de", fahrzeug: "HLF", position: "Schlauchtrupp 1" },
-    { email: "b.ludwig@feuerwehr.de", fahrzeug: "HLF", position: "Schlauchtrupp 2" },
     { email: "f.baumann@feuerwehr.de", fahrzeug: "DL", position: "Maschinist" },
     { email: "n.roth@feuerwehr.de", fahrzeug: "DL", position: "Fahrzeugführer" },
-    { email: "o.richter@feuerwehr.de", fahrzeug: "ELW", position: "C-Dienst" },
+    { email: "o.richter@feuerwehr.de", fahrzeug: "ELW", position: "Wachabteilungsführer" },
     { email: "k.schreiber@feuerwehr.de", fahrzeug: "GW MANV", position: "Fahrer", sonderfunktion: "Koch" },
   ]);
   console.log("Abt 2 Tagschicht: 20 Zuweisungen");
@@ -419,7 +427,7 @@ async function main() {
     { email: "a.frank@feuerwehr.de", fahrzeug: "HLF", position: "Wassertrupp 2" },
     { email: "f.baumann@feuerwehr.de", fahrzeug: "DL", position: "Maschinist" },
     { email: "k.schreiber@feuerwehr.de", fahrzeug: "DL", position: "Fahrzeugführer" },
-    { email: "o.richter@feuerwehr.de", fahrzeug: "ELW", position: "C-Dienst" },
+    { email: "o.richter@feuerwehr.de", fahrzeug: "ELW", position: "Wachabteilungsführer" },
   ]);
   await prisma.tagesFahrzeug.create({
     data: { dienstplanId: abt2Nacht.id, fahrzeugId: fahrzeugMap["RTW Dora"].id, aktiv: false },
@@ -442,11 +450,9 @@ async function main() {
     { email: "d.ernst@feuerwehr.de", fahrzeug: "HLF", position: "Angriffstrupp 2" },
     { email: "h.otto@feuerwehr.de", fahrzeug: "HLF", position: "Wassertrupp 1" },
     { email: "j.keller@feuerwehr.de", fahrzeug: "HLF", position: "Wassertrupp 2" },
-    { email: "n.beck@feuerwehr.de", fahrzeug: "HLF", position: "Schlauchtrupp 1" },
-    { email: "j.jansen@feuerwehr.de", fahrzeug: "HLF", position: "Schlauchtrupp 2" },
     { email: "f.stein@feuerwehr.de", fahrzeug: "DL", position: "Maschinist" },
     { email: "l.grosse@feuerwehr.de", fahrzeug: "DL", position: "Fahrzeugführer" },
-    { email: "j.schaefer@feuerwehr.de", fahrzeug: "ELW", position: "C-Dienst" },
+    { email: "j.schaefer@feuerwehr.de", fahrzeug: "ELW", position: "Wachabteilungsführer" },
     { email: "m.dietrich@feuerwehr.de", fahrzeug: "GW MANV", position: "Fahrer", sonderfunktion: "Koch" },
   ]);
   console.log("Abt 3 Tagschicht: 20 Zuweisungen");
@@ -467,7 +473,7 @@ async function main() {
     { email: "s.hahn@feuerwehr.de", fahrzeug: "HLF", position: "Wassertrupp 2" },
     { email: "f.stein@feuerwehr.de", fahrzeug: "DL", position: "Maschinist" },
     { email: "m.dietrich@feuerwehr.de", fahrzeug: "DL", position: "Fahrzeugführer" },
-    { email: "j.schaefer@feuerwehr.de", fahrzeug: "ELW", position: "C-Dienst" },
+    { email: "j.schaefer@feuerwehr.de", fahrzeug: "ELW", position: "Wachabteilungsführer" },
   ]);
   await prisma.tagesFahrzeug.create({
     data: { dienstplanId: abt3Nacht.id, fahrzeugId: fahrzeugMap["RTW Dora"].id, aktiv: false },
@@ -493,7 +499,7 @@ async function main() {
     // DL: Maschinist braucht Masch
     { fahrzeug: "DL", position: "Maschinist", qualis: ["Masch"] },
     // ELW: C-Dienst braucht ZF oder GF
-    { fahrzeug: "ELW", position: "C-Dienst", qualis: ["ZF"] },
+    { fahrzeug: "ELW", position: "Wachabteilungsführer", qualis: ["ZF"] },
   ];
 
   for (const pq of posQualiDefaults) {

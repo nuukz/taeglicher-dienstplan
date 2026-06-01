@@ -23,6 +23,7 @@ import type {
   SchichtKonfiguration,
   DienstplanResponse,
   AbwesenheitData,
+  QualifikationData,
 } from "@/types/dienstplan";
 
 // ----------------------------------------------------------------
@@ -81,6 +82,7 @@ function DienstplanBearbeitenInner() {
   );
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [allPersonal, setAllPersonal] = useState<UserData[]>([]);
+  const [qualifikationen, setQualifikationen] = useState<QualifikationData[]>([]);
   const [fahrzeuge, setFahrzeuge] = useState<FahrzeugData[]>([]);
   const [sonderfunktionen, setSonderfunktionen] = useState<SonderfunktionData[]>([]);
   const [schichtZeiten, setSchichtZeiten] = useState<SchichtKonfiguration[]>([]);
@@ -124,30 +126,34 @@ function DienstplanBearbeitenInner() {
     if (!abteilungId) return;
     setLoading(true);
     try {
-      const [fzRes, persRes, sfRes, zeitRes, abtRes] = await Promise.all([
+      const datum = formatDateApi(currentDate);
+      const [fzRes, persRes, sfRes, zeitRes, abtRes, qualiRes] = await Promise.all([
         fetch("/api/fahrzeuge"),
-        fetch(`/api/personal?abteilung=${abteilungId}`),
+        fetch(`/api/personal?abteilung=${abteilungId}&datum=${datum}`),
         fetch("/api/sonderfunktionen"),
         fetch("/api/einstellungen"),
         fetch("/api/abteilungen"),
+        fetch("/api/qualifikationen"),
       ]);
 
       if (!fzRes.ok || !persRes.ok || !sfRes.ok || !zeitRes.ok) {
         throw new Error("Stammdaten konnten nicht geladen werden");
       }
 
-      const [fzData, persData, sfData, zeitData, abtData] = await Promise.all([
+      const [fzData, persData, sfData, zeitData, abtData, qualiData] = await Promise.all([
         fzRes.json(),
         persRes.json(),
         sfRes.json(),
         zeitRes.json(),
         abtRes.ok ? abtRes.json() : [],
+        qualiRes.ok ? qualiRes.json() : [],
       ]);
 
       setFahrzeuge(fzData);
       setAllPersonal(persData);
       setSonderfunktionen(sfData);
       setSchichtZeiten(zeitData);
+      setQualifikationen(qualiData);
 
       setAbteilungen(abtData);
       if (abtData.length > 0 && abteilungId) {
@@ -159,7 +165,7 @@ function DienstplanBearbeitenInner() {
     } finally {
       setLoading(false);
     }
-  }, [abteilungId]);
+  }, [abteilungId, currentDate]);
 
   useEffect(() => {
     fetchBaseData();
@@ -416,7 +422,10 @@ function DienstplanBearbeitenInner() {
           personal={allPersonal}
           abwesenheiten={abwesenheiten}
           datum={formatDateApi(currentDate)}
+          abteilungId={abteilungId ?? ""}
+          qualifikationen={qualifikationen}
           onAbwesenheitChanged={fetchDienstplan}
+          onVertretungAdded={fetchBaseData}
           onWeiter={() => setStep(2)}
         />
       ) : step === 2 ? (

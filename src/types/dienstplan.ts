@@ -21,6 +21,7 @@ export interface UserData {
   beschaeftigung: "BEAMTER" | "ANGESTELLTER" | "AZUBI";
   aktiv: boolean;
   abteilungId: string;
+  vertretungFuerDatum?: string | null; // gesetzt = Tagesvertretung (Aushilfe nur fuer dieses Datum)
   qualifikationen?: { qualifikation: QualifikationData }[];
 }
 

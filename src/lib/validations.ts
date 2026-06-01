@@ -12,6 +12,14 @@ export const createUserSchema = z.object({
   abteilungId: z.string().min(1, "Wachabteilung ist erforderlich"),
 });
 
+export const createVertretungSchema = z.object({
+  vorname: z.string().min(1, "Vorname ist erforderlich"),
+  nachname: z.string().min(1, "Nachname ist erforderlich"),
+  datum: z.string().min(1, "Datum ist erforderlich"),
+  abteilungId: z.string().min(1, "Wachabteilung ist erforderlich"),
+  qualifikationIds: z.array(z.string()).optional(),
+});
+
 export const updateUserSchema = z.object({
   email: z.string().email("Ungültige E-Mail-Adresse").optional(),
   passwort: z.string().min(8, "Passwort muss mindestens 8 Zeichen haben").optional(),

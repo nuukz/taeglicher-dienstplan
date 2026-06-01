@@ -85,6 +85,9 @@ model User {
   beschaeftigung Beschaeftigung
   aktiv          Boolean       @default(true)
   abteilungId    String
+  // Tagesvertretung: wenn gesetzt, ist dieser User eine Aushilfe nur fuer dieses
+  // Datum und erscheint ausschliesslich an diesem Tag in der Verfuegbarkeitsliste.
+  vertretungFuerDatum DateTime? @db.Date
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 

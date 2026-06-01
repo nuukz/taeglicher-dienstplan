@@ -5,7 +5,7 @@ import { hash } from "bcryptjs";
 import { createUserSchema } from "@/lib/validations";
 import { requireRole, getAbteilungScope, isSysop } from "@/lib/permissions";
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session) {
@@ -16,17 +16,32 @@ export async function GET(_request: NextRequest) {
     // SYSOP sieht alle, alle anderen nur die eigene Abteilung + (WA-uebergreifende) Azubis.
     const scope = getAbteilungScope(session.user);
 
+    // Tagesvertretungen (vertretungFuerDatum) erscheinen nur an ihrem Datum.
+    // Ohne datum-Param werden sie ganz ausgeblendet (z.B. auf der Personal-Seite).
+    const datumParam = new URL(request.url).searchParams.get("datum");
+    const datumDate = datumParam
+      ? new Date(datumParam + "T00:00:00.000Z")
+      : null;
+
     const users = await prisma.user.findMany({
       where: {
-        ...(scope
-          ? {
-              OR: [
-                { abteilungId: scope },
-                { beschaeftigung: "AZUBI" },
-              ],
-            }
-          : {}),
-        rolle: { not: "SYSOP" },
+        AND: [
+          scope
+            ? {
+                OR: [
+                  { abteilungId: scope },
+                  { beschaeftigung: "AZUBI" },
+                ],
+              }
+            : {},
+          { rolle: { not: "SYSOP" } },
+          {
+            OR: [
+              { vertretungFuerDatum: null },
+              ...(datumDate ? [{ vertretungFuerDatum: datumDate }] : []),
+            ],
+          },
+        ],
       },
       include: {
         abteilung: true,

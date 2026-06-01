@@ -139,17 +139,27 @@ export async function DELETE(
     if (denied) return denied;
 
     const { id } = await params;
+    const hard = new URL(request.url).searchParams.get("hard") === "1";
 
     // Ziel-User laden fuer Abteilungs-Pruefung
     const ziel = await prisma.user.findUnique({
       where: { id },
-      select: { abteilungId: true, beschaeftigung: true },
+      select: { abteilungId: true, beschaeftigung: true, vertretungFuerDatum: true },
     });
     if (!ziel) {
       return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
     }
     if (!darfUser(session, ziel)) {
       return NextResponse.json({ error: "Kein Zugriff auf diesen Benutzer" }, { status: 403 });
+    }
+
+    // Tagesvertretungen koennen hart geloescht werden (Platzhalter-Accounts).
+    if (hard && ziel.vertretungFuerDatum) {
+      await prisma.$transaction([
+        prisma.zuweisung.deleteMany({ where: { userId: id } }),
+        prisma.user.delete({ where: { id } }),
+      ]);
+      return NextResponse.json({ success: true });
     }
 
     const user = await prisma.user.update({

@@ -55,10 +55,10 @@ function NavLink({ href, label, icon: Icon }: { href: string; label: string; ico
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
         isActive
-          ? "bg-red-700 text-white"
-          : "text-slate-300 hover:bg-slate-800 hover:text-white"
+          ? "bg-red-600 text-white"
+          : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
       )}
     >
       <Icon className="size-5" />
@@ -96,8 +96,8 @@ export function DesktopSidebar({ vorname, rolle, abteilungName }: AppNavProps) {
   const waLabel = rolle === "SYSOP" ? "Systemverwaltung" : `WA ${abteilungName}`;
 
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:bg-slate-900">
-      <Link href="/dienstplan" className="flex h-16 items-center gap-3 border-b border-slate-800 px-6 hover:bg-slate-800 transition-colors">
+    <aside className="hidden md:flex md:w-64 md:flex-col bg-zinc-950 border-r border-zinc-800">
+      <Link href="/dienstplan" className="flex h-16 items-center gap-3 border-b border-zinc-800 px-6 hover:bg-zinc-900 transition-colors">
         <CalendarDays className="size-6 text-red-500" />
         <div>
           <h1 className="text-lg font-bold text-white leading-tight">WachPlan</h1>
@@ -109,9 +109,9 @@ export function DesktopSidebar({ vorname, rolle, abteilungName }: AppNavProps) {
           <NavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />
         ))}
       </nav>
-      <div className="border-t border-slate-800 px-4 py-4">
+      <div className="border-t border-zinc-800 px-4 py-4">
         <div className="mb-3 flex items-center gap-3">
-          <div className="flex size-8 items-center justify-center rounded-full bg-slate-700 text-sm font-medium text-white">
+          <div className="flex size-8 items-center justify-center rounded-full bg-red-600 text-sm font-medium text-white">
             {vorname.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">

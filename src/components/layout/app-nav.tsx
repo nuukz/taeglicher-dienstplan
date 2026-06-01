@@ -55,10 +55,10 @@ function NavLink({ href, label, icon: Icon }: { href: string; label: string; ico
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all",
         isActive
-          ? "bg-red-700 text-white"
-          : "text-slate-300 hover:bg-slate-800 hover:text-white"
+          ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-900/40 scale-[1.02]"
+          : "text-slate-300 hover:bg-white/10 hover:text-white"
       )}
     >
       <Icon className="size-5" />
@@ -96,7 +96,7 @@ export function DesktopSidebar({ vorname, rolle, abteilungName }: AppNavProps) {
   const waLabel = rolle === "SYSOP" ? "Systemverwaltung" : `WA ${abteilungName}`;
 
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:bg-slate-900">
+    <aside className="hidden md:flex md:w-64 md:flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-red-950 shadow-xl">
       <Link href="/dienstplan" className="flex h-16 items-center gap-3 border-b border-slate-800 px-6 hover:bg-slate-800 transition-colors">
         <CalendarDays className="size-6 text-red-500" />
         <div>

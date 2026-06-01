@@ -62,10 +62,10 @@ async function main() {
 
   // --- Fahrzeuge mit Positionen ---
   const fahrzeugDaten = [
-    { name: "RTW Anton", typ: "Rettungswagen", reihenfolge: 1, positionen: ["Fahrer", "Beifahrer"] },
-    { name: "RTW Berta", typ: "Rettungswagen", reihenfolge: 2, positionen: ["Fahrer", "Beifahrer"] },
-    { name: "RTW Cäsar", typ: "Rettungswagen", reihenfolge: 3, positionen: ["Fahrer", "Beifahrer"] },
-    { name: "RTW Dora", typ: "Rettungswagen", reihenfolge: 4, positionen: ["Fahrer", "Beifahrer"] },
+    { name: "RTW Anton", typ: "Rettungswagen", reihenfolge: 1, positionen: ["Fahrer", "Beifahrer", "Azubi"] },
+    { name: "RTW Berta", typ: "Rettungswagen", reihenfolge: 2, positionen: ["Fahrer", "Beifahrer", "Azubi"] },
+    { name: "RTW Cäsar", typ: "Rettungswagen", reihenfolge: 3, positionen: ["Fahrer", "Beifahrer", "Azubi"] },
+    { name: "RTW Dora", typ: "Rettungswagen", reihenfolge: 4, positionen: ["Fahrer", "Beifahrer", "Azubi"] },
     { name: "HLF", typ: "Hamburger Löschfahrzeug", reihenfolge: 5, positionen: ["Maschinist", "Fahrzeugführer", "Angriffstrupp 1", "Angriffstrupp 2", "Wassertrupp 1", "Wassertrupp 2", "Schlauchtrupp 1", "Schlauchtrupp 2"] },
     { name: "DL", typ: "Drehleiter", reihenfolge: 6, positionen: ["Maschinist", "Fahrzeugführer"] },
     { name: "ELW", typ: "Einsatzleitwagen", reihenfolge: 7, positionen: ["C-Dienst"] },

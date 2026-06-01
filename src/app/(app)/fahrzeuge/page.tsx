@@ -56,12 +56,14 @@ interface FahrzeugFormData {
   name: string;
   typ: string;
   reihenfolge: number;
+  anzahlPlaetze: number;
 }
 
 const emptyFahrzeugForm: FahrzeugFormData = {
   name: "",
   typ: "",
   reihenfolge: 0,
+  anzahlPlaetze: 2,
 };
 
 // ----------------------------------------------------------------
@@ -128,6 +130,7 @@ export default function FahrzeugePage() {
       name: fahrzeug.name,
       typ: fahrzeug.typ,
       reihenfolge: fahrzeug.reihenfolge,
+      anzahlPlaetze: 0,
     });
     setDialogOpen(true);
   }
@@ -355,6 +358,29 @@ export default function FahrzeugePage() {
                     }
                   />
                 </div>
+
+                {!editingFahrzeug && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="fz-plaetze">Anzahl Plätze (Besatzung)</Label>
+                    <Input
+                      id="fz-plaetze"
+                      type="number"
+                      min={0}
+                      max={20}
+                      value={form.anzahlPlaetze}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          anzahlPlaetze: parseInt(e.target.value) || 0,
+                        }))
+                      }
+                    />
+                    <p className="text-xs text-slate-400">
+                      Legt automatisch so viele Plätze an (Platz 1, Platz 2 …).
+                      Namen kannst du danach noch ändern.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <DialogFooter className="mt-6">

@@ -52,8 +52,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { anzahlPlaetze, ...fahrzeugData } = parsed.data;
+
     const fahrzeug = await prisma.fahrzeug.create({
-      data: parsed.data,
+      data: {
+        ...fahrzeugData,
+        ...(anzahlPlaetze && anzahlPlaetze > 0
+          ? {
+              positionen: {
+                create: Array.from({ length: anzahlPlaetze }, (_, i) => ({
+                  name: `Platz ${i + 1}`,
+                  reihenfolge: i + 1,
+                })),
+              },
+            }
+          : {}),
+      },
       include: {
         positionen: true,
       },

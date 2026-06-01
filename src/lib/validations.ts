@@ -29,6 +29,8 @@ export const createFahrzeugSchema = z.object({
   name: z.string().min(1, "Name ist erforderlich"),
   typ: z.string().min(1, "Typ ist erforderlich"),
   reihenfolge: z.number().int().default(0),
+  // Optionale Standard-Besatzung: legt beim Anlegen so viele Plaetze an
+  anzahlPlaetze: z.number().int().min(0).max(20).optional(),
 });
 
 export const updateFahrzeugSchema = z.object({

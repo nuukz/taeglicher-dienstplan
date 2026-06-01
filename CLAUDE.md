@@ -33,7 +33,10 @@ Tagesdienstplan-System fuer die Feuerwehr. Admins (Wachhabende) teilen Kollegen 
 - **Qualifikation** - Typen wie NotSan, RS, AGT, Masch, GF etc. mit Farbe + Kuerzel
 - **UserQualifikation** - Many-to-Many Join (User ↔ Qualifikation)
 - **Abwesenheit** - Pro User/Datum/Schicht mit Grund (KRANK, URLAUB, FORTBILDUNG, FREI, SONSTIGES)
-- 3 Migrationen: `init`, `add_qualifikationen`, `add_abwesenheit`
+- **FahrzeugDienstzeit** - Wochenvorlage pro Fahrzeug (Wochentag 0=Mo..6=So × TAG/NACHT, `imDienst`). SYSOP-verwaltet. Beim Dienstplan-Anlegen werden nicht-im-Dienst-Fahrzeuge automatisch als inaktiv vorbelegt.
+- **Fahrzeug.parentFahrzeugId** (Self-Relation "MitBesetzung") - mitbesetzte Fahrzeuge spiegeln die Mannschaft des Mutterfahrzeugs (GW MANV ← HLF, GW ← RTW Kaufmann). Helper: `src/lib/mitbesetzung.ts`. Kinder werden nicht separat eingeteilt, zaehlen nicht doppelt.
+- **User.vertretungFuerDatum** - Tagesvertretung (Aushilfe nur fuer ein Datum; Platzhalter-Account, nicht einloggbar). Erscheint nur am Datum in der Verfuegbarkeitsliste (`/api/personal?datum=`).
+- 6 Migrationen: `init`, `add_qualifikationen`, `add_abwesenheit`, `add_fahrzeug_dienstzeit`, `add_fahrzeug_mitbesetzung`, `add_tagesvertretung`
 
 ## Berechtigungen & Abteilungstrennung (WICHTIG)
 Zentrale Helper in `src/lib/permissions.ts`. Jede schreibende/lesende API-Route muss sie nutzen:
@@ -43,9 +46,25 @@ Zentrale Helper in `src/lib/permissions.ts`. Jede schreibende/lesende API-Route 
 - **Globale Stammdaten (Fahrzeug, Sonderfunktion, SchichtKonfiguration, Abteilung, Qualifikation):** Schreiben nur SYSOP (`requireRole(session, "SYSOP")`), Lesen fuer alle. ADMIN darf sie NICHT aendern (wuerde alle WA betreffen).
 - **Rollen-Eskalation:** SYSOP-Rolle und Abteilungswechsel nur durch SYSOP vergebbar (in den Personal-Routen geprueft, nicht nur im Zod-Schema).
 
-## Bearbeitungs-Workflow (2 Schritte)
-1. **Verfuegbarkeit** (`verfuegbarkeit-editor.tsx`): Wer ist abwesend? Grund waehlen per Select-Dropdown.
-2. **Einteilen** (`einteilen-editor.tsx`): Split-View - links verfuegbare Kollegen mit Quali-Badges, rechts Fahrzeuge mit Positionen. Click-to-Assign: Person anklicken → Position anklicken → fertig.
+## Bearbeitungs-Workflow (3 Schritte)
+1. **Verfuegbarkeit** (`verfuegbarkeit-editor.tsx`): Wer ist abwesend? Grund waehlen per Select-Dropdown. Button "Vertretung" legt eine Tagesvertretung (Aushilfe nur fuer diesen Tag, mit Qualis) an.
+2. **Einteilen** (`einteilen-editor.tsx`): Split-View - links verfuegbare Kollegen mit Quali-Badges, rechts Fahrzeuge mit Positionen. Click-to-Assign + Drag&Drop. Button fuehrt zu Schritt 3 (nicht direkt senden).
+3. **Kontrolle & Versenden** (`kontrolle-versenden.tsx`): Uebersicht pro Schicht (besetzt/offen), Warnung bei offenen Positionen, dann bewusst "Jetzt veroeffentlichen & senden".
+
+## SYSOP-Vollzugriff
+SYSOP kann ueber einen Abteilungs-Umschalter (`?wa=` in `/dienstplan` + `/dienstplan/bearbeiten`) jede WA ansehen UND bearbeiten. Sidebar zeigt "Systemverwaltung". APIs lassen SYSOP per `darfAbteilung`/`getAbteilungScope` ueberall zu.
+
+## Sicherheit / Hardening (WICHTIG)
+- Login: konstanter Dummy-bcrypt (kein Timing-Leak), In-Memory-Rate-Limiting (`src/lib/rate-limit.ts`, 10/15min pro E-Mail+IP), E-Mail case-insensitive. Inaktive Accounts + Tagesvertretungen sind NICHT einloggbar (SYSOP ist `aktiv=true`).
+- Session `maxAge` 8h; Secret-Guard wirft in Produktion bei Platzhalter/zu kurzem `AUTH_SECRET`.
+- Security-Header in `next.config.mjs` (X-Frame-Options, nosniff, Referrer/Permissions-Policy, CSP frame-ancestors; HSTS nur Prod). `poweredByHeader: false`.
+- Login-Schnellbuttons (Demo-Creds) nur in Entwicklung (`NODE_ENV !== "production"`).
+- Zod: Datums-Format YYYY-MM-DD, Zeit 00:00–23:59, Laengen-/Array-Limits, Passwort min 12.
+
+## Design-Branches (experimentell, nicht master)
+- `design/v1-bold` - kraeftiges Rot, Gradient-Sidebar, runde Ecken, Tiefen-Hintergrund.
+- `design/v2-mira` - shadcn-Preset b5KIUN7cH (zinc/red, medium radius), clean/flach.
+Master nutzt weiterhin das urspruengliche Design.
 
 ## Seed-Daten
 61 User ueber 3 Wachabteilungen, 12 Qualifikationstypen. Logins:

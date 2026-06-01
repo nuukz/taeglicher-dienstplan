@@ -8,8 +8,8 @@ import {
   Check,
   Power,
   X,
-  Send,
   ChevronLeft,
+  ChevronRight,
   User,
   AlertTriangle,
 } from "lucide-react";
@@ -328,12 +328,8 @@ export function EinteilenEditor({
                 : "bg-red-600 hover:bg-red-700 text-white"
               }
             >
-              {publishing ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Send className="size-4" />
-              )}
-              {allPublished ? "Aktualisieren & Senden" : "Veroeffentlichen"}
+              Weiter zur Kontrolle
+              <ChevronRight className="size-4" />
             </Button>
           )}
         </div>

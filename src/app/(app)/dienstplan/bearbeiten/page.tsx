@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { VerfuegbarkeitEditor } from "@/components/dienstplan/verfuegbarkeit-editor";
 import { EinteilenEditor } from "@/components/dienstplan/einteilen-editor";
+import { KontrolleVersenden } from "@/components/dienstplan/kontrolle-versenden";
 import { MonatsKalender } from "@/components/dienstplan/monats-kalender";
 import type {
   UserData,
@@ -78,7 +79,7 @@ function DienstplanBearbeitenInner() {
   const [currentDate, setCurrentDate] = useState<Date>(
     initialDatum ? parseDateString(initialDatum) : new Date()
   );
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [allPersonal, setAllPersonal] = useState<UserData[]>([]);
   const [fahrzeuge, setFahrzeuge] = useState<FahrzeugData[]>([]);
   const [sonderfunktionen, setSonderfunktionen] = useState<SonderfunktionData[]>([]);
@@ -366,25 +367,20 @@ function DienstplanBearbeitenInner() {
 
         {/* Stepper Indicator */}
         <div className="ml-auto flex items-center gap-1">
-          <div
-            className={`flex items-center justify-center rounded-full size-6 text-xs font-bold ${
-              step === 1
-                ? "bg-blue-600 text-white"
-                : "bg-slate-200 text-slate-600"
-            }`}
-          >
-            1
-          </div>
-          <div className="w-6 h-0.5 bg-slate-200" />
-          <div
-            className={`flex items-center justify-center rounded-full size-6 text-xs font-bold ${
-              step === 2
-                ? "bg-blue-600 text-white"
-                : "bg-slate-200 text-slate-600"
-            }`}
-          >
-            2
-          </div>
+          {[1, 2, 3].map((n, i) => (
+            <div key={n} className="flex items-center gap-1">
+              {i > 0 && <div className="w-5 h-0.5 bg-slate-200" />}
+              <div
+                className={`flex items-center justify-center rounded-full size-6 text-xs font-bold ${
+                  step === n
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-200 text-slate-600"
+                }`}
+              >
+                {n}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -423,7 +419,7 @@ function DienstplanBearbeitenInner() {
           onAbwesenheitChanged={fetchDienstplan}
           onWeiter={() => setStep(2)}
         />
-      ) : (
+      ) : step === 2 ? (
         <EinteilenEditor
           verfuegbareKollegen={verfuegbareKollegen}
           fahrzeuge={fahrzeuge}
@@ -434,6 +430,18 @@ function DienstplanBearbeitenInner() {
           onZuweisungChanged={fetchDienstplan}
           onZurueck={() => setStep(1)}
           publishing={publishing}
+          onPublish={() => setStep(3)}
+        />
+      ) : (
+        <KontrolleVersenden
+          datum={formatDateApi(currentDate)}
+          abteilungName={abteilungName}
+          tagDienstplan={dienstplanData?.tag ?? null}
+          nachtDienstplan={dienstplanData?.nacht ?? null}
+          fahrzeuge={fahrzeuge}
+          schichtZeiten={schichtZeiten}
+          publishing={publishing}
+          onZurueck={() => setStep(2)}
           onPublish={handlePublish}
         />
       )}

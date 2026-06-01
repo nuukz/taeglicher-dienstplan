@@ -137,7 +137,7 @@ async function main() {
       rolle: Rolle.SYSOP,
       beschaeftigung: Beschaeftigung.BEAMTER,
       abteilungId: abt1.id,
-      aktiv: false, // Kein aktiver Feuerwehrmann
+      aktiv: true, // einloggbar; wird ohnehin per rolle!=SYSOP aus allen Listen gefiltert
     },
   });
   console.log("SYSOP-User erstellt");

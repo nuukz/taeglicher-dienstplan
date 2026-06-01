@@ -1,30 +1,50 @@
 import { z } from "zod";
 
+// Gemeinsame Bausteine (Hardening: Format- und Laengen-Grenzen)
+const datumString = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Datum muss im Format YYYY-MM-DD sein");
+const emailNorm = z
+  .string()
+  .email("Ungültige E-Mail-Adresse")
+  .max(254)
+  .toLowerCase()
+  .trim();
+const passwort = z
+  .string()
+  .min(12, "Passwort muss mindestens 12 Zeichen haben")
+  .max(128);
+const personName = z.string().min(1).max(100);
+const zeitHHMM = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Zeit muss HH:MM (00:00–23:59) sein");
+const qualiIdArray = z.array(z.string().min(1).max(64)).max(50);
+
 // --- Personal ---
 
 export const createUserSchema = z.object({
-  email: z.string().email("Ungültige E-Mail-Adresse"),
-  passwort: z.string().min(8, "Passwort muss mindestens 8 Zeichen haben"),
-  vorname: z.string().min(1, "Vorname ist erforderlich"),
-  nachname: z.string().min(1, "Nachname ist erforderlich"),
+  email: emailNorm,
+  passwort,
+  vorname: personName,
+  nachname: personName,
   rolle: z.enum(["SYSOP", "ADMIN", "KOLLEGE"]).default("KOLLEGE"),
   beschaeftigung: z.enum(["BEAMTER", "ANGESTELLTER", "AZUBI"]),
   abteilungId: z.string().min(1, "Wachabteilung ist erforderlich"),
 });
 
 export const createVertretungSchema = z.object({
-  vorname: z.string().min(1, "Vorname ist erforderlich"),
-  nachname: z.string().min(1, "Nachname ist erforderlich"),
-  datum: z.string().min(1, "Datum ist erforderlich"),
+  vorname: personName,
+  nachname: personName,
+  datum: datumString,
   abteilungId: z.string().min(1, "Wachabteilung ist erforderlich"),
-  qualifikationIds: z.array(z.string()).optional(),
+  qualifikationIds: qualiIdArray.optional(),
 });
 
 export const updateUserSchema = z.object({
-  email: z.string().email("Ungültige E-Mail-Adresse").optional(),
-  passwort: z.string().min(8, "Passwort muss mindestens 8 Zeichen haben").optional(),
-  vorname: z.string().min(1).optional(),
-  nachname: z.string().min(1).optional(),
+  email: emailNorm.optional(),
+  passwort: passwort.optional(),
+  vorname: personName.optional(),
+  nachname: personName.optional(),
   rolle: z.enum(["SYSOP", "ADMIN", "KOLLEGE"]).optional(),
   beschaeftigung: z.enum(["BEAMTER", "ANGESTELLTER", "AZUBI"]).optional(),
   abteilungId: z.string().min(1).optional(),
@@ -34,24 +54,24 @@ export const updateUserSchema = z.object({
 // --- Fahrzeuge ---
 
 export const createFahrzeugSchema = z.object({
-  name: z.string().min(1, "Name ist erforderlich"),
-  typ: z.string().min(1, "Typ ist erforderlich"),
-  reihenfolge: z.number().int().default(0),
+  name: z.string().min(1, "Name ist erforderlich").max(100),
+  typ: z.string().min(1, "Typ ist erforderlich").max(100),
+  reihenfolge: z.number().int().min(0).max(9999).default(0),
   // Optionale Standard-Besatzung: legt beim Anlegen so viele Plaetze an
   anzahlPlaetze: z.number().int().min(0).max(20).optional(),
 });
 
 export const updateFahrzeugSchema = z.object({
-  name: z.string().min(1).optional(),
-  typ: z.string().min(1).optional(),
-  reihenfolge: z.number().int().optional(),
+  name: z.string().min(1).max(100).optional(),
+  typ: z.string().min(1).max(100).optional(),
+  reihenfolge: z.number().int().min(0).max(9999).optional(),
   aktiv: z.boolean().optional(),
 });
 
 export const createPositionSchema = z.object({
-  name: z.string().min(1, "Positionsname ist erforderlich"),
-  reihenfolge: z.number().int().default(0),
-  requiredQualifikationIds: z.array(z.string()).optional(),
+  name: z.string().min(1, "Positionsname ist erforderlich").max(100),
+  reihenfolge: z.number().int().min(0).max(9999).default(0),
+  requiredQualifikationIds: qualiIdArray.optional(),
 });
 
 export const deletePositionSchema = z.object({
@@ -74,18 +94,18 @@ export const updateFahrzeugDienstzeitSchema = z.object({
 // --- Sonderfunktionen ---
 
 export const createSonderfunktionSchema = z.object({
-  name: z.string().min(1, "Name ist erforderlich"),
+  name: z.string().min(1, "Name ist erforderlich").max(100),
 });
 
 export const updateSonderfunktionSchema = z.object({
-  name: z.string().min(1).optional(),
+  name: z.string().min(1).max(100).optional(),
   aktiv: z.boolean().optional(),
 });
 
 // --- Dienstplan ---
 
 export const createDienstplanSchema = z.object({
-  datum: z.string().min(1, "Datum ist erforderlich"), // "2026-05-29"
+  datum: datumString, // "2026-05-29"
   schicht: z.enum(["TAG", "NACHT"]),
   abteilungId: z.string().min(1, "Wachabteilung ist erforderlich"),
 });
@@ -121,15 +141,15 @@ export const tagesFahrzeugSchema = z.object({
 
 export const createAbwesenheitSchema = z.object({
   userId: z.string().min(1, "User-ID ist erforderlich"),
-  datum: z.string().min(1, "Datum ist erforderlich"),
+  datum: datumString,
   schicht: z.enum(["TAG", "NACHT"]).optional().nullable(),
   grund: z.enum(["KRANK", "URLAUB", "FORTBILDUNG", "FREI", "SONSTIGES"]),
-  notiz: z.string().optional().nullable(),
+  notiz: z.string().max(2000).optional().nullable(),
 });
 
 export const deleteAbwesenheitSchema = z.object({
   userId: z.string().min(1, "User-ID ist erforderlich"),
-  datum: z.string().min(1, "Datum ist erforderlich"),
+  datum: datumString,
   schicht: z.enum(["TAG", "NACHT"]).optional().nullable(),
 });
 
@@ -161,6 +181,6 @@ export const updateQualifikationSchema = z.object({
 
 export const updateSchichtKonfigurationSchema = z.object({
   schicht: z.enum(["TAG", "NACHT"]),
-  startZeit: z.string().regex(/^\d{2}:\d{2}$/, "Format muss HH:MM sein"),
-  endZeit: z.string().regex(/^\d{2}:\d{2}$/, "Format muss HH:MM sein"),
+  startZeit: zeitHHMM,
+  endZeit: zeitHHMM,
 });

@@ -13,6 +13,18 @@ export async function GET(
       return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
     }
 
+    // Abteilungstrennung: nur Benutzer der eigenen Abteilung (Azubis ausgenommen)
+    const ziel = await prisma.user.findUnique({
+      where: { id: params.id },
+      select: { abteilungId: true, beschaeftigung: true },
+    });
+    if (!ziel) {
+      return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
+    }
+    if (!darfUser(session, ziel)) {
+      return NextResponse.json({ error: "Kein Zugriff auf diesen Benutzer" }, { status: 403 });
+    }
+
     const userQualis = await prisma.userQualifikation.findMany({
       where: { userId: params.id },
       include: { qualifikation: true },
@@ -51,6 +63,7 @@ export async function PUT(
 
     if (
       !Array.isArray(qualifikationIds) ||
+      qualifikationIds.length > 50 ||
       !qualifikationIds.every((q) => typeof q === "string")
     ) {
       return NextResponse.json(

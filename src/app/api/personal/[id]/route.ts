@@ -96,7 +96,15 @@ export async function PATCH(
       }
     }
 
-    const updateData: Record<string, unknown> = { ...data };
+    // Whitelist: nur explizit erlaubte Felder uebernehmen (kein Mass-Assignment)
+    const updateData: Record<string, unknown> = {};
+    if (data.vorname !== undefined) updateData.vorname = data.vorname;
+    if (data.nachname !== undefined) updateData.nachname = data.nachname;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.beschaeftigung !== undefined) updateData.beschaeftigung = data.beschaeftigung;
+    if (data.rolle !== undefined) updateData.rolle = data.rolle;
+    if (data.abteilungId !== undefined) updateData.abteilungId = data.abteilungId;
+    if (data.aktiv !== undefined) updateData.aktiv = data.aktiv;
 
     if (passwort) {
       updateData.passwortHash = await hash(passwort, 12);

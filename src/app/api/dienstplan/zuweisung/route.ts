@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createZuweisungSchema, deleteZuweisungSchema } from "@/lib/validations";
-import { requireRole, darfAbteilung } from "@/lib/permissions";
+import { requireRole, darfAbteilung, darfUser } from "@/lib/permissions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +37,22 @@ export async function POST(request: NextRequest) {
     if (!darfAbteilung(session, dienstplan.abteilungId)) {
       return NextResponse.json(
         { error: "Kein Zugriff auf diese Wachabteilung" },
+        { status: 403 }
+      );
+    }
+
+    // Abteilungstrennung: der eingeteilte User muss zur eigenen Abteilung
+    // gehoeren (Azubis WA-uebergreifend) – kein Cross-WA-Einteilen.
+    const zielUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { abteilungId: true, beschaeftigung: true },
+    });
+    if (!zielUser) {
+      return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
+    }
+    if (!darfUser(session, zielUser)) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Benutzer" },
         { status: 403 }
       );
     }

@@ -1,17 +1,29 @@
 import type { NextAuthConfig } from "next-auth";
 
+// NextAuth v5 erwartet AUTH_SECRET; wir akzeptieren weiterhin NEXTAUTH_SECRET.
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+
+// Hardening: In Produktion KEIN Platzhalter / zu kurzes Secret zulassen,
+// sonst koennten JWTs gefaelscht werden.
+const secretUnsicher =
+  !authSecret || authSecret.length < 32 || authSecret.includes("CHANGE_ME");
+if (process.env.NODE_ENV === "production" && secretUnsicher) {
+  throw new Error(
+    "AUTH_SECRET/NEXTAUTH_SECRET fehlt oder ist ein Platzhalter. Bitte ein starkes Secret (>= 32 Zeichen) setzen."
+  );
+}
+
 // Edge-kompatible Auth-Config (ohne Prisma/pg imports)
 // Wird von der Middleware verwendet
 export const authConfig: NextAuthConfig = {
   trustHost: true,
-  // NextAuth v5 erwartet AUTH_SECRET. Wir akzeptieren weiterhin NEXTAUTH_SECRET,
-  // damit die App im Produktionsbetrieb (Hetzner) nicht mit MissingSecret abbricht.
-  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  secret: authSecret,
   pages: {
     signIn: "/login",
   },
   session: {
     strategy: "jwt",
+    maxAge: 8 * 60 * 60, // 8 Stunden statt 30 Tage (begrenzt Stale-Token-Risiko)
   },
   providers: [], // Providers werden in auth.ts hinzugefügt
   callbacks: {

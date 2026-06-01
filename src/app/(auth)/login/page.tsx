@@ -21,6 +21,9 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Schnell-Login-Buttons (mit Demo-Zugangsdaten) nur in der Entwicklung zeigen
+  const isDev = process.env.NODE_ENV !== "production";
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -103,9 +106,11 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent className="flex flex-col gap-5">
-          {/* SYSOP Quick-Login */}
+          {isDev && (
+          <>
+          {/* SYSOP Quick-Login – nur in Entwicklung */}
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-slate-500 text-center">Schnell-Login</p>
+            <p className="text-xs font-medium text-slate-500 text-center">Schnell-Login (nur Entwicklung)</p>
             <button
               type="button"
               disabled={loading}
@@ -138,6 +143,8 @@ export default function LoginPage() {
             <span className="text-xs text-slate-400">oder</span>
             <div className="h-px flex-1 bg-slate-200" />
           </div>
+          </>
+          )}
 
           {/* Manuelles Login */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">

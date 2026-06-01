@@ -271,8 +271,11 @@ export default function DienstplanPage() {
       setSchichtZeiten(zeitData);
       setAbteilungen(abtData);
 
-      // SYSOP darf jede Abteilung waehlen (?wa=...), alle anderen nur die eigene
-      const ziel = isSysop && waParam ? waParam : session?.user?.abteilungId;
+      // SYSOP darf jede Abteilung waehlen (?wa=...), alle anderen nur die eigene.
+      // Ungueltige ?wa= (nicht in der Abteilungsliste) wird ignoriert.
+      const waGueltig =
+        isSysop && waParam && abtData.some((a: Abteilung) => a.id === waParam);
+      const ziel = waGueltig ? waParam : session?.user?.abteilungId;
       if (ziel) {
         setSelectedAbteilung(ziel);
         const abt = abtData.find((a: Abteilung) => a.id === ziel);

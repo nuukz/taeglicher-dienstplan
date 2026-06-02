@@ -216,6 +216,23 @@ function DienstplanBearbeitenInner() {
     }
   }, [currentDate, abteilungId]);
 
+  // Stiller Refetch nach Aenderungen (Zuweisen/Abwesenheit): nur GET, KEIN
+  // Lade-Spinner und KEIN erneutes Anlegen -> Editor bleibt stehen, kein Sprung nach oben.
+  const refetchDienstplanSilent = useCallback(async () => {
+    if (!abteilungId) return;
+    try {
+      const datum = formatDateApi(currentDate);
+      const [dpRes, abwRes] = await Promise.all([
+        fetch(`/api/dienstplan?datum=${datum}&abteilungId=${abteilungId}`),
+        fetch(`/api/abwesenheit?datum=${datum}&abteilungId=${abteilungId}`),
+      ]);
+      if (dpRes.ok) setDienstplanData(await dpRes.json());
+      if (abwRes.ok) setAbwesenheiten(await abwRes.json());
+    } catch {
+      /* transient – Editor bleibt mit bisherigem Stand sichtbar */
+    }
+  }, [currentDate, abteilungId]);
+
   useEffect(() => {
     if (abteilungId) fetchDienstplan();
   }, [fetchDienstplan, abteilungId]);
@@ -424,7 +441,7 @@ function DienstplanBearbeitenInner() {
           datum={formatDateApi(currentDate)}
           abteilungId={abteilungId ?? ""}
           qualifikationen={qualifikationen}
-          onAbwesenheitChanged={fetchDienstplan}
+          onAbwesenheitChanged={refetchDienstplanSilent}
           onVertretungAdded={fetchBaseData}
           onWeiter={() => setStep(2)}
         />
@@ -436,7 +453,7 @@ function DienstplanBearbeitenInner() {
           nachtDienstplan={dienstplanData?.nacht ?? null}
           sonderfunktionen={sonderfunktionen}
           schichtZeiten={schichtZeiten}
-          onZuweisungChanged={fetchDienstplan}
+          onZuweisungChanged={refetchDienstplanSilent}
           onZurueck={() => setStep(1)}
           publishing={publishing}
           onPublish={() => setStep(3)}

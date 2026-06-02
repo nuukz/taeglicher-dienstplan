@@ -68,7 +68,7 @@ async function main() {
     { name: "RTW Dora", typ: "Rettungswagen", reihenfolge: 4, positionen: ["Fahrer", "Beifahrer", "Azubi"] },
     { name: "HLF", typ: "Hamburger Löschfahrzeug", reihenfolge: 5, positionen: ["Maschinist", "Fahrzeugführer", "Angriffstrupp 1", "Angriffstrupp 2", "Wassertrupp 1", "Wassertrupp 2"] },
     { name: "DL", typ: "Drehleiter", reihenfolge: 6, positionen: ["Maschinist", "Fahrzeugführer"] },
-    { name: "ELW", typ: "Einsatzleitwagen", reihenfolge: 7, positionen: ["Wachabteilungsführer", "Maschinist"] },
+    { name: "ELW", typ: "Einsatzleitwagen", reihenfolge: 7, positionen: ["Wachabteilungsführer", "Fahrer"] },
     { name: "GW MANV", typ: "Gerätewagen MANV", reihenfolge: 8, positionen: ["Fahrer", "Beifahrer"] },
     { name: "RTW Kaufmann", typ: "Rettungswagen", reihenfolge: 9, positionen: ["Fahrer", "Beifahrer"] },
     { name: "GW", typ: "Gerätewagen", reihenfolge: 10, positionen: [] as string[] },

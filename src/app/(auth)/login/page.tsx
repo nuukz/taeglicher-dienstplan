@@ -21,8 +21,10 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Schnell-Login-Buttons (mit Demo-Zugangsdaten) nur in der Entwicklung zeigen
-  const isDev = process.env.NODE_ENV !== "production";
+  // Schnell-Login-Buttons (mit Demo-Zugangsdaten) nur zeigen, wenn explizit
+  // per Env-Flag aktiviert. Lokal in .env auf "true"; auf dem echten Server NICHT
+  // gesetzt -> keine Demo-Zugangsdaten im Production-Bundle.
+  const isDev = process.env.NEXT_PUBLIC_DEMO_LOGIN === "true";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

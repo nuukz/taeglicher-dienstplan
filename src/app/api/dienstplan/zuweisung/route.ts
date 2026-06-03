@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Azubis bekommen niemals eine Sonderfunktion (Zusatzaufgabe) – erzwingen.
+    const effektiveSonderfunktionId =
+      zielUser.beschaeftigung === "AZUBI" ? null : sonderfunktionId ?? null;
+
     // Prüfen ob die Position schon besetzt ist
     const existingPosition = await prisma.zuweisung.findUnique({
       where: {
@@ -73,7 +77,7 @@ export async function POST(request: NextRequest) {
         where: { id: existingPosition.id },
         data: {
           userId,
-          sonderfunktionId: sonderfunktionId ?? null,
+          sonderfunktionId: effektiveSonderfunktionId,
         },
         include: {
           user: {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, Power, PowerOff, Loader2, Star } from "lucide-react";
+import { Plus, Pencil, Power, PowerOff, Loader2, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,10 @@ export default function SonderfunktionenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Sonderfunktion | null>(null);
   const [formName, setFormName] = useState("");
+
+  // Löschen-Bestätigung
+  const [deleteTarget, setDeleteTarget] = useState<Sonderfunktion | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // ----------------------------------------------------------
   // Data fetching
@@ -154,6 +158,27 @@ export default function SonderfunktionenPage() {
       fetchData();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Unbekannter Fehler");
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/sonderfunktionen/${deleteTarget.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Fehler beim Löschen");
+      }
+      toast.success(`"${deleteTarget.name}" gelöscht`);
+      setDeleteTarget(null);
+      fetchData();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Unbekannter Fehler");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -271,7 +296,7 @@ export default function SonderfunktionenPage() {
                         <Pencil className="size-3.5" />
                       </Button>
                       <Button
-                        variant={item.aktiv ? "destructive" : "ghost"}
+                        variant="ghost"
                         size="icon-sm"
                         onClick={() => handleToggleAktiv(item)}
                         title={item.aktiv ? "Deaktivieren" : "Aktivieren"}
@@ -281,6 +306,14 @@ export default function SonderfunktionenPage() {
                         ) : (
                           <Power className="size-3.5" />
                         )}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon-sm"
+                        onClick={() => setDeleteTarget(item)}
+                        title="Löschen"
+                      >
+                        <Trash2 className="size-3.5" />
                       </Button>
                     </div>
                   </TableCell>
@@ -320,7 +353,7 @@ export default function SonderfunktionenPage() {
                   <Pencil className="size-3.5" />
                 </Button>
                 <Button
-                  variant={item.aktiv ? "destructive" : "ghost"}
+                  variant="ghost"
                   size="icon-sm"
                   onClick={() => handleToggleAktiv(item)}
                 >
@@ -330,11 +363,54 @@ export default function SonderfunktionenPage() {
                     <Power className="size-3.5" />
                   )}
                 </Button>
+                <Button
+                  variant="destructive"
+                  size="icon-sm"
+                  onClick={() => setDeleteTarget(item)}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Löschen-Bestätigung */}
+      <Dialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Sonderfunktion löschen?</DialogTitle>
+            <DialogDescription>
+              „{deleteTarget?.name}“ wird endgültig gelöscht. Falls die Funktion
+              aktuell in einem Dienstplan vergeben ist, wird sie dort entfernt.
+              Das kann nicht rückgängig gemacht werden.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6 gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              disabled={deleting}
+            >
+              Abbrechen
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting && <Loader2 className="size-4 animate-spin" />}
+              Endgültig löschen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -586,33 +586,39 @@ export function EinteilenEditor({
                                     {zuweisung.user.nachname},{" "}
                                     {zuweisung.user.vorname}
                                   </span>
-                                  {/* Sonderfunktion */}
-                                  <Select
-                                    value={
-                                      zuweisung.sonderfunktionId ?? "__none__"
-                                    }
-                                    onValueChange={(v) =>
-                                      handleSonderfunktion(zuweisung, v)
-                                    }
-                                  >
-                                    <SelectTrigger className="h-6 w-32 text-xs">
-                                      <SelectValue placeholder="Sonderfkt." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="__none__">
-                                        <span className="text-slate-400">
-                                          Keine
-                                        </span>
-                                      </SelectItem>
-                                      {sonderfunktionen
-                                        .filter((sf) => sf.aktiv)
-                                        .map((sf) => (
-                                          <SelectItem key={sf.id} value={sf.id}>
-                                            {sf.name}
-                                          </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                  </Select>
+                                  {/* Sonderfunktion – Azubis bekommen niemals eine Zusatzaufgabe */}
+                                  {zuweisung.user.beschaeftigung === "AZUBI" ? (
+                                    <span className="text-xs text-slate-300 italic">
+                                      Azubi
+                                    </span>
+                                  ) : (
+                                    <Select
+                                      value={
+                                        zuweisung.sonderfunktionId ?? "__none__"
+                                      }
+                                      onValueChange={(v) =>
+                                        handleSonderfunktion(zuweisung, v)
+                                      }
+                                    >
+                                      <SelectTrigger className="h-6 w-32 text-xs">
+                                        <SelectValue placeholder="Sonderfkt." />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="__none__">
+                                          <span className="text-slate-400">
+                                            Keine
+                                          </span>
+                                        </SelectItem>
+                                        {sonderfunktionen
+                                          .filter((sf) => sf.aktiv)
+                                          .map((sf) => (
+                                            <SelectItem key={sf.id} value={sf.id}>
+                                              {sf.name}
+                                            </SelectItem>
+                                          ))}
+                                      </SelectContent>
+                                    </Select>
+                                  )}
                                   {/* Entfernen */}
                                   <Button
                                     variant="ghost"

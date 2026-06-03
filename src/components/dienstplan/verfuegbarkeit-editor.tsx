@@ -9,6 +9,7 @@ import {
   Loader2,
   UserPlus,
   Trash2,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type {
   UserData,
   AbwesenheitData,
@@ -77,6 +85,45 @@ export function VerfuegbarkeitEditor({
   const [vNachname, setVNachname] = useState("");
   const [vQualis, setVQualis] = useState<string[]>([]);
   const [vSaving, setVSaving] = useState(false);
+
+  // Schnell-Vertretung: ein Klick legt eine Aushilfe mit der gewaehlten
+  // Qualifikation an (generischer Name, kein Tippen).
+  const [quickQualiId, setQuickQualiId] = useState<string | null>(null);
+
+  async function handleQuickVertretung(quali: QualifikationData) {
+    if (quickQualiId) return;
+    setQuickQualiId(quali.id);
+    try {
+      // Mehrere gleiche Rollen durchnummerieren ("NotSan 2", ...)
+      const gleiche = personal.filter(
+        (u) =>
+          u.vertretungFuerDatum &&
+          u.qualifikationen?.some((q) => q.qualifikation.id === quali.id)
+      ).length;
+      const nachname = gleiche > 0 ? `${quali.kuerzel} ${gleiche + 1}` : quali.kuerzel;
+      const res = await fetch("/api/personal/vertretung", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vorname: "Vertretung",
+          nachname,
+          datum,
+          abteilungId,
+          qualifikationIds: [quali.id],
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Fehler beim Anlegen");
+      }
+      toast.success(`Vertretung „${nachname}“ hinzugefügt`);
+      onVertretungAdded();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Fehler");
+    } finally {
+      setQuickQualiId(null);
+    }
+  }
 
   function toggleVQuali(id: string) {
     setVQualis((prev) =>
@@ -203,6 +250,43 @@ export function VerfuegbarkeitEditor({
             <span className="font-semibold text-emerald-600">{verfuegbar.length}</span>
             {" "}von {activePersonal.length} verfügbar
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="outline" disabled={quickQualiId !== null}>
+                  {quickQualiId !== null ? (
+                    <Loader2 className="mr-1 size-4 animate-spin" />
+                  ) : (
+                    <Zap className="mr-1 size-4" />
+                  )}
+                  Schnell-Vertretung
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Aushilfe mit Qualifikation anlegen</DropdownMenuLabel>
+              {qualifikationen.length === 0 && (
+                <div className="px-1.5 py-1 text-xs text-slate-400">
+                  Keine Qualifikationen verfügbar.
+                </div>
+              )}
+              {qualifikationen.map((q) => (
+                <DropdownMenuItem
+                  key={q.id}
+                  onClick={() => handleQuickVertretung(q)}
+                  disabled={quickQualiId !== null}
+                >
+                  <span
+                    className="inline-block rounded px-1.5 py-0 text-[10px] font-medium text-white"
+                    style={{ backgroundColor: q.farbe }}
+                  >
+                    {q.kuerzel}
+                  </span>
+                  <span className="text-sm">{q.name}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" onClick={() => setVertretungOpen(true)}>
             <UserPlus className="mr-1 size-4" />
             Vertretung

@@ -61,16 +61,23 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const sonderfunktion = await prisma.sonderfunktion.update({
-      where: { id },
-      data: { aktiv: false },
-    });
+    // Echtes Löschen: zuerst die Sonderfunktion aus allen bestehenden
+    // Zuweisungen entfernen (Feld ist optional), dann hart löschen. So
+    // funktioniert das Löschen auch, wenn die Funktion aktuell benutzt wird.
+    await prisma.$transaction([
+      prisma.zuweisung.updateMany({
+        where: { sonderfunktionId: id },
+        data: { sonderfunktionId: null },
+      }),
+      prisma.sonderfunktion.delete({ where: { id } }),
+    ]);
 
-    return NextResponse.json(sonderfunktion);
+    return NextResponse.json({ success: true });
   } catch (error: unknown) {
     if (
       error instanceof Error &&
-      error.message.includes("Record to update not found")
+      (error.message.includes("Record to delete does not exist") ||
+        error.message.includes("Record to update not found"))
     ) {
       return NextResponse.json({ error: "Sonderfunktion nicht gefunden" }, { status: 404 });
     }

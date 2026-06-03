@@ -1,9 +1,10 @@
 # Handover – ShiftHero WachPlan
 
-Stand: 3. Juni 2026. Alles committet & gepusht. `master` ist live deployt.
+Stand: 3. Juni 2026 (Abend). Alles committet & gepusht. `master` (`2edc502`) ist live deployt & verifiziert (Service `active`, HTTP 200).
 
 ## Live
 - **URL:** https://wachplan.dev.squidion.de — aktueller `master`-Stand ist deployt.
+- **Geplante Domain `bfhh.dev`:** Lenny will künftig `bfhh.dev` nutzen. Stand jetzt löst die Domain NICHT auf (NXDOMAIN, auch extern) – DNS noch nicht gesetzt. Zum Aktivieren: DNS-A-Record `bfhh.dev` → `128.140.124.33`, dann nginx-vhost + Certbot anlegen. „Auf bfhh.dev deployen" meint aktuell faktisch den bestehenden Server.
 - **Server:** Hetzner, `root@128.140.124.33` (Host „squidion"), SSH-Key `~/.ssh/id_ed25519`.
 - **App:** `/opt/apps/wachplan`, systemd `wachplan.service` (Next.js auf :3002, **läuft als root – Backlog**), nginx + Certbot (HTTPS).
 - **DB:** PostgreSQL lokal, DB `wachplan`. Backups (manuell): `/opt/apps/wachplan/db-backup-*.sql.gz`. `?schema=public` für psql/pg_dump abschneiden.
@@ -21,6 +22,10 @@ npm run build && systemctl restart wachplan.service
 ```
 
 ## Bisher umgesetzt (master + live)
+- **NEU (diese Session, live):**
+  - **Schnell-Vertretung:** In Schritt 1 (Verfügbarkeit) neuer Button „Schnell-Vertretung" (Dropdown mit allen Qualis). Ein Klick legt sofort eine Tagesvertretung mit der gewählten Qualifikation an – generischer Name (`<Kürzel>, Vertretung`), mehrere gleiche werden auto-nummeriert. Der alte „Vertretung"-Dialog (eigener Name + Quali-Kombi) bleibt. Datei: `verfuegbarkeit-editor.tsx`.
+  - **Azubis bekommen NIE eine Sonderfunktion:** Sonderfunktions-Select beim Einteilen für Azubis ausgeblendet (`einteilen-editor.tsx`) UND serverseitig erzwungen (`sonderfunktionId=null` für Azubis in `api/dienstplan/zuweisung/route.ts`).
+  - **Sonderfunktionen echt löschbar:** Lösch-Button + Bestätigungs-Dialog in der Verwaltung (`(app)/sonderfunktionen/page.tsx`). DELETE-Route macht jetzt HARD-Delete (entfernt die Funktion vorab aus bestehenden Zuweisungen via Transaktion) statt Soft-Delete. Deaktivieren (Toggle) bleibt zusätzlich.
 - **Features:** Fahrzeug-Dienstzeiten (SYSOP-Wochenraster), Mit-Besetzung (GW MANV←HLF, GW←Kaufmann), Tagesvertretung, Kontroll-Schritt vor Versenden, SYSOP-Abteilungs-Umschalter, „Anzahl Plätze" beim Anlegen.
 - **Security-Hardening** (eigenes Audit): Rate-Limiting + Timing-Schutz beim Login, inaktive/Vertretungs-Accounts nicht einloggbar, Session 8h, Secret-Guard, IDOR/Mass-Assignment zu, Security-Header, strikte Zod-Validierung, Demo-Login nur per Flag.
 - **Umlaute** (ü/ä/ö/ß) in allen UI-Texten.

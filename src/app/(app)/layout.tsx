@@ -27,6 +27,11 @@ export default async function AppLayout({
         <main className="flex-1 overflow-y-auto bg-zinc-50 p-4 pb-20 md:p-6 md:pb-6">
           <PushPrompt />
           {children}
+          <footer className="mt-8 flex items-center justify-center gap-3 text-xs text-slate-400">
+            <a href="/impressum" className="hover:text-slate-600">Impressum</a>
+            <span>·</span>
+            <a href="/datenschutz" className="hover:text-slate-600">Datenschutz</a>
+          </footer>
         </main>
 
         <MobileBottomNav rolle={rolle as Rolle} />

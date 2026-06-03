@@ -192,6 +192,12 @@ export default function LoginPage() {
           </form>
         </CardContent>
       </Card>
+
+      <div className="mt-4 flex items-center justify-center gap-3 text-xs text-slate-400">
+        <a href="/impressum" className="hover:text-slate-600">Impressum</a>
+        <span>·</span>
+        <a href="/datenschutz" className="hover:text-slate-600">Datenschutz</a>
+      </div>
     </div>
   );
 }

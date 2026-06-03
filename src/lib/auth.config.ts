@@ -51,7 +51,10 @@ export const authConfig: NextAuthConfig = {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
       const isPublicRoute =
-        pathname.startsWith("/login") || pathname.startsWith("/api/auth");
+        pathname.startsWith("/login") ||
+        pathname.startsWith("/api/auth") ||
+        pathname.startsWith("/impressum") ||
+        pathname.startsWith("/datenschutz");
 
       if (isPublicRoute) {
         if (isLoggedIn && pathname.startsWith("/login")) {

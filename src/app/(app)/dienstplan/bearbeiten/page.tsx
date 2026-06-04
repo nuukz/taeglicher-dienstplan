@@ -449,6 +449,7 @@ function DienstplanBearbeitenInner() {
         <EinteilenEditor
           verfuegbareKollegen={verfuegbareKollegen}
           fahrzeuge={fahrzeuge}
+          datum={formatDateApi(currentDate)}
           tagDienstplan={dienstplanData?.tag ?? null}
           nachtDienstplan={dienstplanData?.nacht ?? null}
           sonderfunktionen={sonderfunktionen}

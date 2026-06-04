@@ -22,6 +22,7 @@ export async function GET() {
         typ: true,
         aktiv: true,
         reihenfolge: true,
+        parentFahrzeugId: true,
         dienstzeiten: {
           select: { wochentag: true, schicht: true, imDienst: true },
         },
@@ -62,27 +63,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Fahrzeug nicht gefunden" }, { status: 404 });
     }
 
-    // Alle Eintraege atomar setzen (upsert pro Wochentag+Schicht)
-    await prisma.$transaction(
-      eintraege.map((e) =>
-        prisma.fahrzeugDienstzeit.upsert({
-          where: {
-            fahrzeugId_wochentag_schicht: {
-              fahrzeugId,
-              wochentag: e.wochentag,
-              schicht: e.schicht,
-            },
-          },
-          update: { imDienst: e.imDienst },
-          create: {
-            fahrzeugId,
-            wochentag: e.wochentag,
-            schicht: e.schicht,
-            imDienst: e.imDienst,
-          },
-        })
-      )
-    );
+    // Vollersatz: erst alle bestehenden Eintraege des Fahrzeugs loeschen, dann neu
+    // schreiben. So bleiben keine alten "Leichen" stehen (echter Ersatz statt Teil-Update).
+    await prisma.$transaction([
+      prisma.fahrzeugDienstzeit.deleteMany({ where: { fahrzeugId } }),
+      prisma.fahrzeugDienstzeit.createMany({
+        data: eintraege.map((e) => ({
+          fahrzeugId,
+          wochentag: e.wochentag,
+          schicht: e.schicht,
+          imDienst: e.imDienst,
+        })),
+      }),
+    ]);
 
     const dienstzeiten = await prisma.fahrzeugDienstzeit.findMany({
       where: { fahrzeugId },

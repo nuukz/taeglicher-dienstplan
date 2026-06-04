@@ -10,6 +10,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   User,
   AlertTriangle,
 } from "lucide-react";
@@ -34,6 +35,7 @@ import type {
   ZuweisungData,
 } from "@/types/dienstplan";
 import { einteilbareFahrzeuge } from "@/lib/mitbesetzung";
+import { berechneAusserDienst } from "@/lib/dienstzeit";
 
 // ----------------------------------------------------------------
 // Quali-Validation Helpers
@@ -75,6 +77,7 @@ function getSchichtZeitraum(
 interface EinteilenEditorProps {
   verfuegbareKollegen: UserData[];
   fahrzeuge: FahrzeugData[];
+  datum: string;
   tagDienstplan: DienstplanData | null;
   nachtDienstplan: DienstplanData | null;
   sonderfunktionen: SonderfunktionData[];
@@ -88,6 +91,7 @@ interface EinteilenEditorProps {
 export function EinteilenEditor({
   verfuegbareKollegen,
   fahrzeuge,
+  datum,
   tagDienstplan,
   nachtDienstplan,
   sonderfunktionen,
@@ -100,6 +104,7 @@ export function EinteilenEditor({
   const [activeSchicht, setActiveSchicht] = useState<"TAG" | "NACHT">("TAG");
   const [savingPositionId, setSavingPositionId] = useState<string | null>(null);
   const [dragOverPositionId, setDragOverPositionId] = useState<string | null>(null);
+  const [ausserDienstOpen, setAusserDienstOpen] = useState(false);
 
   const dienstplan =
     activeSchicht === "TAG" ? tagDienstplan : nachtDienstplan;
@@ -124,13 +129,14 @@ export function EinteilenEditor({
     }
   }
 
-  // Deaktivierte Fahrzeuge
-  const deactivatedFahrzeuge = new Set<string>();
-  if (dienstplan) {
-    for (const tf of dienstplan.tagesFahrzeuge) {
-      if (!tf.aktiv) deactivatedFahrzeuge.add(tf.fahrzeugId);
-    }
-  }
+  // Außer Dienst = aus Wochenvorlage + manuellen Overrides der aktiven Schicht
+  // (lebende Vorlage statt Snapshot).
+  const deactivatedFahrzeuge = berechneAusserDienst(
+    fahrzeuge,
+    dienstplan?.tagesFahrzeuge ?? [],
+    datum,
+    activeSchicht
+  );
 
   // Mitbesetzte Kinder (GW MANV, GW) werden nicht separat eingeteilt
   const activeFahrzeuge = einteilbareFahrzeuge(fahrzeuge.filter((f) => f.aktiv));
@@ -286,6 +292,11 @@ export function EinteilenEditor({
   // Zaehler
   const sichtbareFahrzeuge = activeFahrzeuge.filter(
     (f) => !deactivatedFahrzeuge.has(f.id)
+  );
+  // Nicht im Dienst (deaktiviert) – aus der Hauptliste raus, nur im
+  // einklappbaren "Außer Dienst"-Bereich nachholbar.
+  const ausserDienstFahrzeuge = activeFahrzeuge.filter((f) =>
+    deactivatedFahrzeuge.has(f.id)
   );
   const totalPositions = sichtbareFahrzeuge.reduce(
     (sum, f) => sum + f.positionen.length,
@@ -507,14 +518,9 @@ export function EinteilenEditor({
 
           {/* RECHTS: Fahrzeuge */}
           <div className="flex-1 space-y-3">
-            {activeFahrzeuge.map((fahrzeug) => {
-              const isDeactivated = deactivatedFahrzeuge.has(fahrzeug.id);
-
+            {sichtbareFahrzeuge.map((fahrzeug) => {
               return (
-                <Card
-                  key={fahrzeug.id}
-                  className={isDeactivated ? "opacity-40" : ""}
-                >
+                <Card key={fahrzeug.id}>
                   <CardHeader className="py-2 px-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -525,18 +531,18 @@ export function EinteilenEditor({
                         </span>
                       </div>
                       <Button
-                        variant={isDeactivated ? "default" : "ghost"}
+                        variant="ghost"
                         size="xs"
                         onClick={() =>
-                          handleToggleFahrzeug(fahrzeug.id, isDeactivated)
+                          handleToggleFahrzeug(fahrzeug.id, false)
                         }
+                        title="Außer Dienst nehmen"
                       >
                         <Power className="size-3" />
-                        {isDeactivated ? "Aktivieren" : ""}
                       </Button>
                     </div>
                   </CardHeader>
-                  {!isDeactivated && (
+                  {(
                     <CardContent className="py-1 px-4 pb-3">
                       <div className="grid gap-1">
                         {fahrzeug.positionen.map((pos) => {
@@ -668,6 +674,59 @@ export function EinteilenEditor({
                 </Card>
               );
             })}
+
+            {/* Außer Dienst – nicht im Dienst, aber ausnahmsweise einsetzbar */}
+            {ausserDienstFahrzeuge.length > 0 && (
+              <Card className="border-dashed bg-slate-50/50">
+                <button
+                  type="button"
+                  onClick={() => setAusserDienstOpen((o) => !o)}
+                  className="flex w-full items-center justify-between px-4 py-2 text-left"
+                >
+                  <span className="text-xs font-medium text-slate-500">
+                    Außer Dienst ({ausserDienstFahrzeuge.length})
+                  </span>
+                  <ChevronDown
+                    className={`size-4 text-slate-400 transition-transform ${
+                      ausserDienstOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {ausserDienstOpen && (
+                  <CardContent className="py-1 px-4 pb-3">
+                    <div className="grid gap-1">
+                      {ausserDienstFahrzeuge.map((fahrzeug) => (
+                        <div
+                          key={fahrzeug.id}
+                          className="flex items-center justify-between rounded px-2 py-1.5"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Truck className="size-4 shrink-0 text-slate-400" />
+                            <span className="text-sm text-slate-600 truncate">
+                              {fahrzeug.name}
+                            </span>
+                            <span className="text-xs text-slate-400 shrink-0">
+                              {fahrzeug.typ}
+                            </span>
+                          </div>
+                          <Button
+                            variant="default"
+                            size="xs"
+                            onClick={() =>
+                              handleToggleFahrzeug(fahrzeug.id, true)
+                            }
+                            title="In den Dienst nehmen"
+                          >
+                            <Power className="size-3" />
+                            Einsetzen
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            )}
           </div>
         </div>
       )}

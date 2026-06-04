@@ -25,6 +25,12 @@ export interface UserData {
   qualifikationen?: { qualifikation: QualifikationData }[];
 }
 
+export interface FahrzeugDienstzeitData {
+  wochentag: number; // 0 = Montag ... 6 = Sonntag
+  schicht: "TAG" | "NACHT";
+  imDienst: boolean;
+}
+
 export interface FahrzeugData {
   id: string;
   name: string;
@@ -33,6 +39,7 @@ export interface FahrzeugData {
   reihenfolge: number;
   parentFahrzeugId?: string | null; // mitbesetzt von diesem Fahrzeug (spiegelt dessen Mannschaft)
   positionen: FahrzeugPositionData[];
+  dienstzeiten?: FahrzeugDienstzeitData[]; // Wochenvorlage (wann im Dienst)
 }
 
 export interface FahrzeugPositionData {

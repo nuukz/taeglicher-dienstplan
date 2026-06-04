@@ -22,6 +22,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { exportDienstplanPdf } from "@/lib/pdf-export";
 import { getAnzeigeQuelle } from "@/lib/mitbesetzung";
+import { berechneAusserDienst } from "@/lib/dienstzeit";
 import { MonatsKalender } from "@/components/dienstplan/monats-kalender";
 import type {
   Abteilung,
@@ -74,25 +75,27 @@ function isToday(date: Date): boolean {
 function SchichtSection({
   label,
   zeitraum,
+  datum,
+  schicht,
   dienstplan,
   fahrzeuge,
   currentUserId,
 }: {
   label: string;
   zeitraum: string;
+  datum: string;
+  schicht: "TAG" | "NACHT";
   dienstplan: DienstplanData | null;
   fahrzeuge: FahrzeugData[];
   currentUserId: string | undefined;
 }) {
-  // Build a map of deactivated vehicles for this schicht
-  const deactivatedFahrzeuge = new Set<string>();
-  if (dienstplan) {
-    for (const tf of dienstplan.tagesFahrzeuge) {
-      if (!tf.aktiv) {
-        deactivatedFahrzeuge.add(tf.fahrzeugId);
-      }
-    }
-  }
+  // Außer Dienst = aus Wochenvorlage + manuellen Overrides berechnet (lebende Vorlage).
+  const deactivatedFahrzeuge = berechneAusserDienst(
+    fahrzeuge,
+    dienstplan?.tagesFahrzeuge ?? [],
+    datum,
+    schicht
+  );
 
   // Build a map: fahrzeugPositionId -> Zuweisung
   const zuweisungByPosition = new Map<string, ZuweisungData>();
@@ -107,8 +110,11 @@ function SchichtSection({
     ? dienstplan.zuweisungen.filter((z) => z.sonderfunktion)
     : [];
 
-  // Only show active fahrzeuge
-  const activeFahrzeuge = fahrzeuge.filter((f) => f.aktiv);
+  // Nur Fahrzeuge zeigen, die aktiv UND an diesem Tag/Schicht im Dienst sind.
+  // Nicht-im-Dienst-Fahrzeuge werden komplett ausgeblendet (nicht ausgegraut).
+  const activeFahrzeuge = fahrzeuge.filter(
+    (f) => f.aktiv && !deactivatedFahrzeuge.has(f.id)
+  );
 
   return (
     <div className="space-y-4">
@@ -121,17 +127,13 @@ function SchichtSection({
       {/* Vehicle Cards */}
       <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {activeFahrzeuge.map((fahrzeug) => {
-          const isDeactivated = deactivatedFahrzeuge.has(fahrzeug.id);
           const { positionen, mitbesetztVon } = getAnzeigeQuelle(
             fahrzeug,
             fahrzeuge
           );
 
           return (
-            <Card
-              key={fahrzeug.id}
-              className={isDeactivated ? "opacity-50" : ""}
-            >
+            <Card key={fahrzeug.id}>
               <CardHeader className="pb-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -141,23 +143,15 @@ function SchichtSection({
                       {fahrzeug.typ}
                     </span>
                   </div>
-                  {isDeactivated && (
-                    <Badge variant="secondary">Außer Dienst</Badge>
-                  )}
                 </div>
-                {mitbesetztVon && !isDeactivated && (
+                {mitbesetztVon && (
                   <p className="text-xs text-blue-600">
                     mitbesetzt von {mitbesetztVon}
                   </p>
                 )}
               </CardHeader>
               <CardContent>
-                {isDeactivated ? (
-                  <p className="text-sm text-slate-400 italic">
-                    Fahrzeug ist an diesem Tag nicht verfügbar.
-                  </p>
-                ) : (
-                  <div className="space-y-1">
+                <div className="space-y-1">
                     {positionen.map((pos) => {
                       const zuweisung = zuweisungByPosition.get(pos.id);
                       const isCurrentUser =
@@ -191,8 +185,7 @@ function SchichtSection({
                         </div>
                       );
                     })}
-                  </div>
-                )}
+                </div>
               </CardContent>
             </Card>
           );
@@ -546,6 +539,8 @@ export default function DienstplanPage() {
           <SchichtSection
             label="Tagschicht"
             zeitraum={getSchichtZeitraum("TAG")}
+            datum={formatDateApi(currentDate)}
+            schicht="TAG"
             dienstplan={dienstplanData?.tag ?? null}
             fahrzeuge={fahrzeuge}
             currentUserId={session?.user?.id}
@@ -557,6 +552,8 @@ export default function DienstplanPage() {
           <SchichtSection
             label="Nachtschicht"
             zeitraum={getSchichtZeitraum("NACHT")}
+            datum={formatDateApi(currentDate)}
+            schicht="NACHT"
             dienstplan={dienstplanData?.nacht ?? null}
             fahrzeuge={fahrzeuge}
             currentUserId={session?.user?.id}

@@ -7,6 +7,7 @@ import type {
   ZuweisungData,
 } from "@/types/dienstplan";
 import { getAnzeigeQuelle } from "@/lib/mitbesetzung";
+import { berechneAusserDienst } from "@/lib/dienstzeit";
 
 function getSchichtZeitraum(
   schicht: "TAG" | "NACHT",
@@ -66,16 +67,17 @@ export function exportDienstplanPdf({
   function renderSchichtTabelle(
     schichtLabel: string,
     zeitraum: string,
+    schicht: "TAG" | "NACHT",
     dienstplan: DienstplanData | null,
     startY: number
   ): number {
-    // Deaktivierte Fahrzeuge
-    const deactivated = new Set<string>();
-    if (dienstplan) {
-      for (const tf of dienstplan.tagesFahrzeuge) {
-        if (!tf.aktiv) deactivated.add(tf.fahrzeugId);
-      }
-    }
+    // Außer Dienst = aus Wochenvorlage + manuellen Overrides (lebende Vorlage).
+    const deactivated = berechneAusserDienst(
+      fahrzeuge,
+      dienstplan?.tagesFahrzeuge ?? [],
+      datum,
+      schicht
+    );
 
     const shownRaw = activeFahrzeuge.filter((f) => !deactivated.has(f.id));
     // Mitbesetzte Fahrzeuge (GW MANV, GW) spiegeln die Positionen ihres Mutterfahrzeugs
@@ -184,6 +186,7 @@ export function exportDienstplanPdf({
   yPos = renderSchichtTabelle(
     "Tagschicht",
     getSchichtZeitraum("TAG", schichtZeiten),
+    "TAG",
     tag,
     yPos
   );
@@ -192,6 +195,7 @@ export function exportDienstplanPdf({
   renderSchichtTabelle(
     "Nachtschicht",
     getSchichtZeitraum("NACHT", schichtZeiten),
+    "NACHT",
     nacht,
     yPos
   );

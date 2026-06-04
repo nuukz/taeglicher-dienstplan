@@ -168,28 +168,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(vorhanden);
     }
 
-    // Neu anlegen: Wochenvorlage anwenden - Fahrzeuge, die an diesem Wochentag in
-    // dieser Schicht laut Vorlage NICHT im Dienst sind, als inaktiv vorbelegen.
-    const wochentag = (datumDate.getUTCDay() + 6) % 7; // 0 = Montag ... 6 = Sonntag
-    const nichtImDienst = await prisma.fahrzeugDienstzeit.findMany({
-      where: { wochentag, schicht, imDienst: false },
-      select: { fahrzeugId: true },
-    });
-
+    // Neu anlegen: KEINE Vorbelegung mehr aus der Wochenvorlage. Der Dienst-Status
+    // wird live aus der Vorlage abgeleitet (src/lib/dienstzeit.ts), damit Vorlagen-
+    // Aenderungen sofort wirken. TagesFahrzeug-Eintraege entstehen nur noch als
+    // bewusste manuelle Overrides (Aktiv/Aus-Schalter im Editor).
     try {
       const dienstplan = await prisma.dienstplan.create({
         data: {
           datum: datumDate,
           schicht,
           abteilungId,
-          ...(nichtImDienst.length > 0 && {
-            tagesFahrzeuge: {
-              create: nichtImDienst.map((f) => ({
-                fahrzeugId: f.fahrzeugId,
-                aktiv: false,
-              })),
-            },
-          }),
         },
         include: dienstplanInclude,
       });

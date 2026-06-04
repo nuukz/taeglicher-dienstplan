@@ -21,6 +21,9 @@ export async function GET() {
             },
           },
         },
+        dienstzeiten: {
+          select: { wochentag: true, schicht: true, imDienst: true },
+        },
       },
       orderBy: { reihenfolge: "asc" },
     });

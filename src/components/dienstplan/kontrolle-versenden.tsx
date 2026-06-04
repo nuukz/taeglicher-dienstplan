@@ -17,6 +17,7 @@ import type {
   SchichtKonfiguration,
 } from "@/types/dienstplan";
 import { getAnzeigeQuelle } from "@/lib/mitbesetzung";
+import { berechneAusserDienst } from "@/lib/dienstzeit";
 
 interface KontrolleVersendenProps {
   datum: string;
@@ -53,12 +54,15 @@ interface Uebersicht {
 
 function berechneUebersicht(
   dienstplan: DienstplanData | null,
-  fahrzeuge: FahrzeugData[]
+  fahrzeuge: FahrzeugData[],
+  datum: string,
+  schicht: "TAG" | "NACHT"
 ): Uebersicht {
-  const deaktiviert = new Set(
-    (dienstplan?.tagesFahrzeuge ?? [])
-      .filter((tf) => !tf.aktiv)
-      .map((tf) => tf.fahrzeugId)
+  const deaktiviert = berechneAusserDienst(
+    fahrzeuge,
+    dienstplan?.tagesFahrzeuge ?? [],
+    datum,
+    schicht
   );
   const zuwByPos = new Map<string, string>();
   const sonderfunktionen: string[] = [];
@@ -105,15 +109,17 @@ function berechneUebersicht(
 function SchichtKontrolle({
   schicht,
   zeit,
+  datum,
   dienstplan,
   fahrzeuge,
 }: {
   schicht: "TAG" | "NACHT";
   zeit: string;
+  datum: string;
   dienstplan: DienstplanData | null;
   fahrzeuge: FahrzeugData[];
 }) {
-  const u = berechneUebersicht(dienstplan, fahrzeuge);
+  const u = berechneUebersicht(dienstplan, fahrzeuge, datum, schicht);
   const existiert = !!dienstplan;
 
   return (
@@ -233,8 +239,8 @@ export function KontrolleVersenden({
     !!tagDienstplan?.veroeffentlicht || !!nachtDienstplan?.veroeffentlicht;
 
   // Gesamt-offen über beide Schichten
-  const tagU = berechneUebersicht(tagDienstplan, fahrzeuge);
-  const nachtU = berechneUebersicht(nachtDienstplan, fahrzeuge);
+  const tagU = berechneUebersicht(tagDienstplan, fahrzeuge, datum, "TAG");
+  const nachtU = berechneUebersicht(nachtDienstplan, fahrzeuge, datum, "NACHT");
   const offenGesamt = tagU.offen + nachtU.offen;
 
   return (
@@ -290,12 +296,14 @@ export function KontrolleVersenden({
       <SchichtKontrolle
         schicht="TAG"
         zeit={zeitraum("TAG", schichtZeiten)}
+        datum={datum}
         dienstplan={tagDienstplan}
         fahrzeuge={fahrzeuge}
       />
       <SchichtKontrolle
         schicht="NACHT"
         zeit={zeitraum("NACHT", schichtZeiten)}
+        datum={datum}
         dienstplan={nachtDienstplan}
         fahrzeuge={fahrzeuge}
       />

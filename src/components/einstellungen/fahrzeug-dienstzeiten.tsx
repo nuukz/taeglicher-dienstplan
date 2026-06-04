@@ -25,6 +25,7 @@ interface FahrzeugDienstzeitDTO {
   typ: string;
   aktiv: boolean;
   reihenfolge: number;
+  parentFahrzeugId: string | null;
   dienstzeiten: { wochentag: number; schicht: Schicht; imDienst: boolean }[];
 }
 
@@ -57,7 +58,10 @@ export function FahrzeugDienstzeiten() {
     try {
       const res = await fetch("/api/fahrzeuge/dienstzeiten");
       if (!res.ok) throw new Error("Dienstzeiten konnten nicht geladen werden");
-      const data: FahrzeugDienstzeitDTO[] = await res.json();
+      const alle: FahrzeugDienstzeitDTO[] = await res.json();
+      // Mitbesetzte Kinder ausblenden: ihr Dienst-Status erbt von der Mutter,
+      // eine eigene Dienstzeit waere wirkungslos.
+      const data = alle.filter((f) => !f.parentFahrzeugId);
       setFahrzeuge(data);
       const g: Record<string, Grid> = {};
       for (const f of data) g[f.id] = gridAusDaten(f.dienstzeiten);

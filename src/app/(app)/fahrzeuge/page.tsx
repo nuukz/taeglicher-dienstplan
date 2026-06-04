@@ -87,6 +87,13 @@ export default function FahrzeugePage() {
   );
   const [posName, setPosName] = useState("");
 
+  // Position-Löschen-Bestätigung
+  const [posDeleteTarget, setPosDeleteTarget] = useState<{
+    fahrzeugId: string;
+    position: FahrzeugPosition;
+  } | null>(null);
+  const [deletingPos, setDeletingPos] = useState(false);
+
   // ----------------------------------------------------------
   // Data fetching
   // ----------------------------------------------------------
@@ -248,23 +255,37 @@ export default function FahrzeugePage() {
     }
   }
 
-  async function handleDeletePosition(fahrzeugId: string, positionId: string) {
+  async function handleDeletePosition() {
+    if (!posDeleteTarget) return;
+    setDeletingPos(true);
     try {
-      const res = await fetch(`/api/fahrzeuge/${fahrzeugId}/positionen`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ positionId }),
-      });
+      const res = await fetch(
+        `/api/fahrzeuge/${posDeleteTarget.fahrzeugId}/positionen`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ positionId: posDeleteTarget.position.id }),
+        }
+      );
 
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Fehler beim Löschen der Position");
       }
 
-      toast.success("Position entfernt");
+      const data = await res.json();
+      const entfernt = data.removedZuweisungen ?? 0;
+      toast.success(
+        entfernt > 0
+          ? `Position entfernt (${entfernt} Einteilung${entfernt === 1 ? "" : "en"} gelöscht)`
+          : "Position entfernt"
+      );
+      setPosDeleteTarget(null);
       fetchData();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Unbekannter Fehler");
+    } finally {
+      setDeletingPos(false);
     }
   }
 
@@ -517,7 +538,10 @@ export default function FahrzeugePage() {
                             variant="ghost"
                             size="icon-xs"
                             onClick={() =>
-                              handleDeletePosition(fahrzeug.id, pos.id)
+                              setPosDeleteTarget({
+                                fahrzeugId: fahrzeug.id,
+                                position: pos,
+                              })
                             }
                             title="Position entfernen"
                           >
@@ -533,6 +557,43 @@ export default function FahrzeugePage() {
           ))}
         </div>
       )}
+
+      {/* Position-Löschen-Bestätigung */}
+      <Dialog
+        open={posDeleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setPosDeleteTarget(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Position löschen?</DialogTitle>
+            <DialogDescription>
+              Die Position „{posDeleteTarget?.position.name}“ wird endgültig
+              gelöscht. Falls sie in Dienstplänen bereits eingeteilt ist, werden
+              diese Einteilungen mit entfernt. Das kann nicht rückgängig gemacht
+              werden.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6 gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setPosDeleteTarget(null)}
+              disabled={deletingPos}
+            >
+              Abbrechen
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeletePosition}
+              disabled={deletingPos}
+            >
+              {deletingPos && <Loader2 className="size-4 animate-spin" />}
+              Endgültig löschen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

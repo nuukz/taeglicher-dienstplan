@@ -115,11 +115,20 @@ export async function DELETE(
       );
     }
 
-    await prisma.fahrzeugPosition.delete({
-      where: { id: parsed.data.positionId },
+    // Position kann in Dienstplaenen eingeteilt sein (Zuweisung referenziert sie
+    // als Pflicht-Relation -> sonst blockiert der Foreign Key das Loeschen).
+    // Deshalb erst die abhaengigen Zuweisungen entfernen, dann die Position.
+    const removedZuweisungen = await prisma.$transaction(async (tx) => {
+      const { count } = await tx.zuweisung.deleteMany({
+        where: { fahrzeugPositionId: parsed.data.positionId },
+      });
+      await tx.fahrzeugPosition.delete({
+        where: { id: parsed.data.positionId },
+      });
+      return count;
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, removedZuweisungen });
   } catch (error) {
     console.error("DELETE /api/fahrzeuge/[id]/positionen error:", error);
     return NextResponse.json({ error: "Interner Serverfehler" }, { status: 500 });

@@ -1,6 +1,6 @@
 # Handover – ShiftHero WachPlan
 
-Stand: 3. Juni 2026 (Abend). Alles committet & gepusht. `master` (`2edc502`) ist live deployt & verifiziert (Service `active`, HTTP 200).
+Stand: 4. Juni 2026. Alles committet & gepusht. `master` (`6c61817`) ist live deployt & verifiziert (Service `active`, HTTP 200).
 
 ## Live
 - **URL:** https://wachplan.dev.squidion.de — aktueller `master`-Stand ist deployt.
@@ -22,10 +22,16 @@ npm run build && systemctl restart wachplan.service
 ```
 
 ## Bisher umgesetzt (master + live)
-- **NEU (diese Session, live):**
-  - **Schnell-Vertretung:** In Schritt 1 (Verfügbarkeit) neuer Button „Schnell-Vertretung" (Dropdown mit allen Qualis). Ein Klick legt sofort eine Tagesvertretung mit der gewählten Qualifikation an – generischer Name (`<Kürzel>, Vertretung`), mehrere gleiche werden auto-nummeriert. Der alte „Vertretung"-Dialog (eigener Name + Quali-Kombi) bleibt. Datei: `verfuegbarkeit-editor.tsx`.
-  - **Azubis bekommen NIE eine Sonderfunktion:** Sonderfunktions-Select beim Einteilen für Azubis ausgeblendet (`einteilen-editor.tsx`) UND serverseitig erzwungen (`sonderfunktionId=null` für Azubis in `api/dienstplan/zuweisung/route.ts`).
-  - **Sonderfunktionen echt löschbar:** Lösch-Button + Bestätigungs-Dialog in der Verwaltung (`(app)/sonderfunktionen/page.tsx`). DELETE-Route macht jetzt HARD-Delete (entfernt die Funktion vorab aus bestehenden Zuweisungen via Transaktion) statt Soft-Delete. Deaktivieren (Toggle) bleibt zusätzlich.
+- **NEU (Session 4. Juni, live):**
+  - **Dienstzeit-Vorlage ist jetzt „lebende Quelle":** Fahrzeug-Dienst-Status (im Dienst pro Datum/Schicht) wird LIVE aus der Wochenvorlage abgeleitet statt nur einmalig beim Anlegen vorbelegt. Vorlagen-Änderungen wirken **sofort und rückwirkend** (auch auf bestehende Tage). Zentraler Helper `src/lib/dienstzeit.ts`: Reihenfolge **manueller Tages-Override (TagesFahrzeug) > Wochenvorlage > Default(im Dienst)**. Genutzt von allen 4 Anzeige-Stellen (`dienstplan/page.tsx`, `einteilen-editor.tsx`, `kontrolle-versenden.tsx`, `pdf-export.ts`). POST `/api/dienstplan` belegt nicht mehr vor; `/api/fahrzeuge` liefert `dienstzeiten[]`; Dienstzeiten-PUT macht Vollersatz (deleteMany+createMany).
+  - **Mitbesetzte Kinder erben den Status der Mutter** (im Dienst, Vorlage UND Global-`aktiv=false`). Dienstzeiten-Editor blendet Kinder aus (Einstellung wäre wirkungslos). Audit-Bugs (Kind sichtbar trotz Mutter-Aus) behoben.
+  - **Außer-Dienst-Fahrzeuge komplett ausgeblendet** statt nur ausgegraut – Anzeige, PDF, Kontrolle. Im Einteilen-Editor wandern sie in einen einklappbaren Bereich „Außer Dienst (N)" mit „Einsetzen"-Knopf (Ausnahme-Tag).
+  - **Fahrzeug-Positionen löschbar trotz bestehender Einteilungen:** DELETE-Route entfernt in einer Transaktion erst die abhängigen Zuweisungen, dann die Position (Foreign-Key-Block behoben); meldet die Anzahl entfernter Einteilungen. UI mit Bestätigungs-Dialog (`(app)/fahrzeuge/page.tsx`).
+  - **Schnell-Vertretung:** In Schritt 1 (Verfügbarkeit) Button „Schnell-Vertretung" (Dropdown mit allen Qualis). Ein Klick legt sofort eine Tagesvertretung mit der gewählten Qualifikation an – generischer Name (`<Kürzel>, Vertretung`), Auto-Nummerierung. Der alte „Vertretung"-Dialog bleibt. Datei: `verfuegbarkeit-editor.tsx`.
+  - **Azubis bekommen NIE eine Sonderfunktion:** Select beim Einteilen für Azubis ausgeblendet (`einteilen-editor.tsx`) UND serverseitig erzwungen (`sonderfunktionId=null` in `api/dienstplan/zuweisung/route.ts`).
+  - **Sonderfunktionen echt löschbar:** Lösch-Button + Bestätigungs-Dialog (`(app)/sonderfunktionen/page.tsx`). DELETE = HARD-Delete (entfernt Funktion vorab aus Zuweisungen) statt Soft-Delete. Deaktivieren-Toggle bleibt zusätzlich.
+
+> **WICHTIG – Dora-Befund (4. Juni, auf Live geprüft):** Doras Live-Vorlage steht auf **Wochenende (Sa+So) Tag+Nacht aus**, aber **Mo–Fr Nacht = AN**. Darum erscheint Dora unter der Woche nachts weiterhin – das ist KEIN Bug, sondern die Vorlage war nie auf „nachts aus" gesetzt. Fix für Lenny: Einstellungen → Fahrzeug-Dienstzeiten → RTW Dora → Mo–Fr „Nacht" auf „–" → Speichern (wirkt sofort). **Nur Dora** hat überhaupt eine Vorlage (14 Einträge); alle anderen Fahrzeuge = immer im Dienst. Nur 3 harmlose Alt-Overrides (Dora So 31.05. Nacht), keine DB-Bereinigung nötig.
 - **Features:** Fahrzeug-Dienstzeiten (SYSOP-Wochenraster), Mit-Besetzung (GW MANV←HLF, GW←Kaufmann), Tagesvertretung, Kontroll-Schritt vor Versenden, SYSOP-Abteilungs-Umschalter, „Anzahl Plätze" beim Anlegen.
 - **Security-Hardening** (eigenes Audit): Rate-Limiting + Timing-Schutz beim Login, inaktive/Vertretungs-Accounts nicht einloggbar, Session 8h, Secret-Guard, IDOR/Mass-Assignment zu, Security-Header, strikte Zod-Validierung, Demo-Login nur per Flag.
 - **Umlaute** (ü/ä/ö/ß) in allen UI-Texten.
